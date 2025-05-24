@@ -1,15 +1,15 @@
 import aiohttp
 from datetime import datetime
+from exchange_listeners.base_listener import BaseExchangeListener
+#import asyncio
 
-BYBIT_FUTURES_API = "https://api.bybit.com"
-AVAILABLE_INTERVAL = ["5m", "15m", "30m", "1h", "2h", "4h", "6h", "12h", "1d"]
+#5min 15min 30min 1h 4h 1d
 
-
-class BybitListener:
+class BybitListener(BaseExchangeListener):
 
     async def fetch_usdt_symbols(self) -> list[str]:
         """Get all USDT perpetual pairs"""
-        url = f"{BYBIT_FUTURES_API}/v5/market/instruments-info"
+        url = "https://api.bybit.com/v5/market/instruments-info"
         params = {"category": "linear"}
 
         async with aiohttp.ClientSession() as session:
@@ -26,22 +26,24 @@ class BybitListener:
                 ]
                 return symbols
 
-    async def fetch_oi(self, symbol: str, interval: str = "5m", limit: int = 5) -> list[dict]:
+    async def fetch_oi(self, symbol: str, interval: str = "5", limit: int = 5) -> list[dict]:
         """Fetch historical open interest"""
-        url = f"{BYBIT_FUTURES_API}/v5/market/open-interest"
+        url = f"https://api.bybit.com/v5/market/open-interest"
         symbol = symbol.upper()
+        interval = interval+"min"
         result = []
 
         params = {
             "category": "linear",
             "symbol": symbol,
             "intervalTime": interval,
-            "limit": limit
+            "limit": str(limit)
         }
 
         async with aiohttp.ClientSession() as session:
             async with session.get(url, params=params) as resp:
                 data = await resp.json()
+                #print("data", data)
 
                 if not isinstance(data, dict) or data.get("retCode") != 0:
                     return [{"error": data}]
@@ -55,21 +57,25 @@ class BybitListener:
                         "datetime": dt,
                         "timestamp": timestamp,
                         "OpenInterest": float(entry['openInterest']),
-                        "OpenInterestValue": float(entry['openInterestValue'])
+                        #"OpenInterestValue": float(entry['openInterestValue'])
                     }
-                    print("coin = ",coin)
+                    #print("coin = ",coin)
                     result.append(coin)
-
         return result
 
-    async def fetch_ohlcv(self, symbol: str, interval: str, start_date: int, end_date: int) -> list[dict]:
+
+    async def fetch_ohlcv(self, symbol: str,  start_date: int, end_date: int, interval: str = "5") -> list[dict]:
         """Fetch OHLCV data for given time range"""
-        url = f"{BYBIT_FUTURES_API}/v5/market/kline"
+        url = "https://api.bybit.com/v5/market/kline"
+
+        print("BYBIT")
+        print("start_date = ", start_date)
+        print("end_date   = ", end_date)
 
         params = {
             "category": "linear",
-            "symbol": symbol,
-            "interval": interval,
+            "symbol": symbol.upper(),
+            "interval": str(interval),
             "start": int(start_date),
             "end": int(end_date),
         }
@@ -79,11 +85,13 @@ class BybitListener:
         async with aiohttp.ClientSession() as session:
             async with session.get(url, params=params) as resp:
                 data = await resp.json()
+                print("Bybit response:", data)
 
                 if not isinstance(data, dict) or data.get("retCode") != 0:
                     return [{"error": data}]
 
                 for candle in data["result"]["list"]:
+                   # print("candle = ",candle)
                     result.append({
                         "timestamp": int(candle[0]),
                         "close": float(candle[4]),
