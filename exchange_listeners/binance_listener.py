@@ -18,11 +18,9 @@ class BinanceListener(BaseExchangeListener):
                 return symbols
 
 
-    async def fetch_oi(self, symbol: str, interval: str = "5", limit: int = 5) -> list[dict]:
+    async def fetch_oi(self, symbol: str, interval: str = "5", limit: int = 7) -> list[dict]:
         url = f"https://fapi.binance.com/futures/data/openInterestHist"
         symbol = symbol.upper()
-        #interval = interval+"m"
-        limit = limit
         result = []
 
         params = {
@@ -49,8 +47,6 @@ class BinanceListener(BaseExchangeListener):
                         "timestamp": timestamp,
                         "open_interest": oi,
                     }
-                    #print("coin = ", coin)
-
                     result.append(coin)
         return result
 
@@ -58,19 +54,17 @@ class BinanceListener(BaseExchangeListener):
     async def fetch_ohlcv(self, symbol: str, start_date: int, end_date: int, interval: str = "5") -> list[dict]:
         url = "https://fapi.binance.com/fapi/v1/klines"
 
-        result = []
-
         params = {
             "symbol": symbol,
             "interval": interval+'m',
             "startTime": int(start_date),
             "endTime": int(end_date)
         }
+        result = []
 
         async with aiohttp.ClientSession() as session:
             async with session.get(url, params=params) as resp:
                 data = await resp.json()
-                #print("Binance response:", data)
 
                 if not isinstance(data, list):
                     return [{"error": data}]
