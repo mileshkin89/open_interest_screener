@@ -21,13 +21,13 @@ class BinanceListener(BaseExchangeListener):
     async def fetch_oi(self, symbol: str, interval: str = "5", limit: int = 5) -> list[dict]:
         url = f"https://fapi.binance.com/futures/data/openInterestHist"
         symbol = symbol.upper()
-        interval = interval+"m"
+        #interval = interval+"m"
         limit = limit
         result = []
 
         params = {
             "symbol": symbol,
-            "period": interval,
+            "period": interval+"m",
             "limit": limit
         }
 
@@ -40,7 +40,6 @@ class BinanceListener(BaseExchangeListener):
 
                 for entry in data:
                     oi = entry.get('sumOpenInterest')
-                    #oi_v = entry.get('sumOpenInterestValue')
                     timestamp = entry.get('timestamp')
                     dt = datetime.fromtimestamp(timestamp / 1000)
                     coin = {
@@ -48,10 +47,10 @@ class BinanceListener(BaseExchangeListener):
                         "symbol": symbol,
                         "datetime": dt,
                         "timestamp": timestamp,
-                        "OpenInterest": oi,
-                        #"OpenInterestValue": oi_v
+                        "open_interest": oi,
                     }
                     #print("coin = ", coin)
+
                     result.append(coin)
         return result
 
@@ -60,10 +59,6 @@ class BinanceListener(BaseExchangeListener):
         url = "https://fapi.binance.com/fapi/v1/klines"
 
         result = []
-
-        print("BINANCE")
-        print("start_date = ", start_date)
-        print("end_date   = ", end_date)
 
         params = {
             "symbol": symbol,
@@ -75,7 +70,7 @@ class BinanceListener(BaseExchangeListener):
         async with aiohttp.ClientSession() as session:
             async with session.get(url, params=params) as resp:
                 data = await resp.json()
-                print("Binance response:", data)
+                #print("Binance response:", data)
 
                 if not isinstance(data, list):
                     return [{"error": data}]

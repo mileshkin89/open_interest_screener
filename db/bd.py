@@ -72,25 +72,25 @@ async def add_signal_in_db(symbol: str, exchange: str, threshold_period: int, th
         await db.commit()
 
 
-async def count_symbol_in_db(symbol: str, threshold_period: int, threshold: float) -> int:
+async def count_symbol_in_db(symbol: str, exchange: str, threshold_period: int, threshold: float) -> int:
     async with aiosqlite.connect(config.DB_PATH) as db:
         async with db.execute("""
             SELECT COUNT(*) FROM signals_temp
-            WHERE symbol = ? AND threshold_period = ? AND threshold = ? 
-        """, (symbol, threshold_period, threshold)) as cursor:
+            WHERE symbol = ? AND exchange = ? AND threshold_period = ? AND threshold = ?
+        """, (symbol, exchange, threshold_period, threshold)) as cursor:
             result = await cursor.fetchone()
             return result[0] if result else 0
 
 
 async def trim_signal_bd(current_timestamp: int):
-    threshold = (current_timestamp - 24 * 60 * 60) * 1000  # 24 часа назад
+    threshold = (current_timestamp - 24 * 60 * 60) * 1000  # 24 hours ago
     async with aiosqlite.connect(config.DB_PATH) as db:
         await db.execute("DELETE FROM signals_temp WHERE timestamp < ?", (threshold,))
         await db.commit()
 
 
 async def trim_history_bd(current_timestamp: int):
-    threshold = (current_timestamp - 24 * 60 * 60) * 1000  # 24 часа назад
+    threshold = (current_timestamp - 24 * 60 * 60) * 1000  # 24 hours ago
     async with aiosqlite.connect(config.DB_PATH) as db:
         await db.execute("DELETE FROM history_temp WHERE timestamp < ?", (threshold,))
         await db.commit()
@@ -106,3 +106,15 @@ async def add_signal_in_total_db(symbol: str, exchange: str, timestamp: int, del
             VALUES (?, ?, ?, ?, ?, ?, ?, ?)
         """, (symbol, exchange, timestamp, delta_oi, delta_price, delta_volume, threshold_period, threshold))
         await db.commit()
+
+
+async def get_historical_oi(symbol: str, exchange: str, before_date: int) -> list[dict]:
+    async with aiosqlite.connect(config.DB_PATH) as db:
+        db.row_factory = aiosqlite.Row  # strings will be returned as dictionaries
+        async with db.execute("""
+            SELECT * FROM history_temp
+            WHERE symbol = ? AND exchange = ? AND timestamp < ?
+            ORDER BY timestamp ASC
+        """, (symbol, exchange, before_date)) as cursor:
+            rows = await cursor.fetchall()
+            return [dict(row) for row in rows]

@@ -56,7 +56,7 @@ class BybitListener(BaseExchangeListener):
                         "symbol": symbol,
                         "datetime": dt,
                         "timestamp": timestamp,
-                        "OpenInterest": float(entry['openInterest']),
+                        "open_interest": float(entry['openInterest']),
                         #"OpenInterestValue": float(entry['openInterestValue'])
                     }
                     #print("coin = ",coin)
@@ -100,3 +100,4 @@ class BybitListener(BaseExchangeListener):
 
         print("result = ",result)
         return result
+
