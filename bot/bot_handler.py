@@ -8,7 +8,7 @@ from aiogram.enums.parse_mode import ParseMode
 from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.client.default import DefaultBotProperties
 
-from config import TG_BOT_API_KEY
+from config import config
 from bot.keyboards import main_menu
 from bot.states import ScreenerSettings
 from scanner_init import scanner_
@@ -16,7 +16,7 @@ from scanner_init import scanner_
 
 dp = Dispatcher(storage=MemoryStorage())
 bot = Bot(
-    token=TG_BOT_API_KEY,
+    token=config.TG_BOT_API_KEY,
     default=DefaultBotProperties(parse_mode=ParseMode.HTML)
 )
 
