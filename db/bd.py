@@ -34,33 +34,33 @@ async def init_db():
                 threshold REAL
             )
         """)
-        await db.execute("""
-            CREATE TABLE IF NOT EXISTS history_temp (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                symbol TEXT,
-                exchange TEXT,
-                timestamp INTEGER,
-                open_interest REAL
-            )
-        """)
-        await db.execute("""
-            CREATE INDEX IF NOT EXISTS idx_history_timestamp 
-            ON history_temp (timestamp)
-        """)
-        await db.execute("""
-            CREATE INDEX IF NOT EXISTS idx_history_symbol_exchange 
-            ON history_temp (symbol, exchange)
-        """)
+        # await db.execute("""
+        #     CREATE TABLE IF NOT EXISTS history_temp (
+        #         id INTEGER PRIMARY KEY AUTOINCREMENT,
+        #         symbol TEXT,
+        #         exchange TEXT,
+        #         timestamp INTEGER,
+        #         open_interest REAL
+        #     )
+        # """)
+        # await db.execute("""
+        #     CREATE INDEX IF NOT EXISTS idx_history_timestamp
+        #     ON history_temp (timestamp)
+        # """)
+        # await db.execute("""
+        #     CREATE INDEX IF NOT EXISTS idx_history_symbol_exchange
+        #     ON history_temp (symbol, exchange)
+        # """)
         await db.commit()
 
 
-async def add_history_in_db(symbol: str, exchange: str, timestamp: int, open_interest: float):
-    async with aiosqlite.connect(config.DB_PATH) as db:
-        await db.execute("""
-            INSERT INTO  history_temp (symbol, exchange, timestamp, open_interest)
-            VALUES (?, ?, ?, ?)
-        """, (symbol, exchange, timestamp, open_interest))
-        await db.commit()
+# async def add_history_in_db(symbol: str, exchange: str, timestamp: int, open_interest: float):
+#     async with aiosqlite.connect(config.DB_PATH) as db:
+#         await db.execute("""
+#             INSERT INTO  history_temp (symbol, exchange, timestamp, open_interest)
+#             VALUES (?, ?, ?, ?)
+#         """, (symbol, exchange, timestamp, open_interest))
+#         await db.commit()
 
 
 async def add_signal_in_db(symbol: str, exchange: str, threshold_period: int, threshold: float, delta_oi: float, timestamp: int):
@@ -89,11 +89,11 @@ async def trim_signal_bd(current_timestamp: int):
         await db.commit()
 
 
-async def trim_history_bd(current_timestamp: int):
-    threshold = (current_timestamp - 24 * 60 * 60) * 1000  # 24 hours ago
-    async with aiosqlite.connect(config.DB_PATH) as db:
-        await db.execute("DELETE FROM history_temp WHERE timestamp < ?", (threshold,))
-        await db.commit()
+# async def trim_history_bd(current_timestamp: int):
+#     threshold = (current_timestamp - 24 * 60 * 60) * 1000  # 24 hours ago
+#     async with aiosqlite.connect(config.DB_PATH) as db:
+#         await db.execute("DELETE FROM history_temp WHERE timestamp < ?", (threshold,))
+#         await db.commit()
 
 
 
@@ -107,14 +107,14 @@ async def add_signal_in_total_db(symbol: str, exchange: str, timestamp: int, del
         """, (symbol, exchange, timestamp, delta_oi, delta_price, delta_volume, threshold_period, threshold))
         await db.commit()
 
-
-async def get_historical_oi(symbol: str, exchange: str, before_date: int) -> list[dict]:
-    async with aiosqlite.connect(config.DB_PATH) as db:
-        db.row_factory = aiosqlite.Row  # strings will be returned as dictionaries
-        async with db.execute("""
-            SELECT * FROM history_temp
-            WHERE symbol = ? AND exchange = ? AND timestamp < ?
-            ORDER BY timestamp ASC
-        """, (symbol, exchange, before_date)) as cursor:
-            rows = await cursor.fetchall()
-            return [dict(row) for row in rows]
+#
+# async def get_historical_oi(symbol: str, exchange: str, before_date: int) -> list[dict]:
+#     async with aiosqlite.connect(config.DB_PATH) as db:
+#         db.row_factory = aiosqlite.Row  # strings will be returned as dictionaries
+#         async with db.execute("""
+#             SELECT * FROM history_temp
+#             WHERE symbol = ? AND exchange = ? AND timestamp < ?
+#             ORDER BY timestamp DESC
+#         """, (symbol, exchange, before_date)) as cursor:
+#             rows = await cursor.fetchall()
+#             return [dict(row) for row in rows]

@@ -1,8 +1,9 @@
 # cond_handler.py
 
 import asyncio
+from datetime import datetime
 from exchange_listeners.base_listener import BaseExchangeListener
-from db.bd import add_signal_in_db, count_symbol_in_db, add_history_in_db, get_historical_oi, add_signal_in_total_db
+from db.bd import add_signal_in_db, count_symbol_in_db, add_signal_in_total_db
 
 AVAILABLE_INTERVAL = {
     "5": 5,
@@ -26,109 +27,97 @@ class ConditionHandler:
     def sort_by_timestamp(self, coin_list: list[dict]) -> list[dict]:
         return sorted(coin_list, key=lambda x: x['timestamp'])
 
+    def sort_by_timestamp_reverse(self, coin_list: list[dict]) -> list[dict]:
+        return sorted(coin_list, key=lambda x: x['timestamp'], reverse=True)
+
     def delta_calculate(self, data_last, data_first) -> float:
+        if float(data_last) == 0:
+            return None
         delta = (float(data_last) - float(data_first)) / float(data_last)
         return delta
 
 
-    async def is_signal(self, symbols: list, threshold_period: int = 15, interval: str = "5", threshold: float = 0.04):
-        self.symbols = symbols#[:10]
+    async def is_signal(self, symbols: list, threshold_period: int = 15, interval: str = "5", threshold: float = 0.05):
+        self.symbols = symbols
         self.interval = interval
         self.threshold_period = threshold_period
-        self.limit = int(self.threshold_period / AVAILABLE_INTERVAL[self.interval])
+        self.limit = int(self.threshold_period / AVAILABLE_INTERVAL[self.interval]) + 1
         self.threshold = threshold
-        start_date: int = None
-        end_date: int = None
+        start_date: int = None          # the latest data
+        end_date: int = None            # the oldest data
         signal_coins = []
-        historical_oi = []
+
 
         print("threshold_period = ",  self.threshold_period)
         print(f"threshold = {self.threshold*100}%")
 
-        # Скачиваем с биржи данные по OI
+        # Download the OI data from exchange
         tasks = [self.client.fetch_oi(symbol.upper(), self.interval, self.limit) for symbol in self.symbols]
-        coins = await asyncio.gather(*tasks)
+        coins = await asyncio.gather(*tasks, return_exceptions=True)
 
         for coin in coins:
-            coin = self.sort_by_timestamp(coin)
-            flag = True
-            #print("coin = ", coin)
+            if isinstance(coin, Exception):
+                print(f"Error while receiving data: {coin}")
+                continue
+
+            coin = self.sort_by_timestamp_reverse(coin)
 
             for i in range(1,len(coin)):
-                # Находим изменение OI
-                historical_oi.clear()  # если выполняется условие сигнала, очищаем словарь
                 exchange_name = coin[0]['exchange']
                 symbol = coin[0]['symbol']
 
-                delta_oi = self.delta_calculate(coin[i]['open_interest'], coin[0]['open_interest'])
+                # Finding the OI change
+                delta_oi = self.delta_calculate(coin[0]['open_interest'], coin[i]['open_interest'])
+                if delta_oi is None:
+                    continue
                 formatted_delta_oi = f"{delta_oi*100:.2f}%"
 
-                if flag:
-                    # Собираю свою историю по каждому символу
-                    timestamp = coin[-1]['timestamp']
-                    open_interest = coin[-1]['open_interest']
-                    await add_history_in_db(symbol, exchange_name, timestamp, open_interest)
-                    flag = False
-
-                #print('coin[i] = ', coin[i])
-
-                # Сравниваем изменение OI с пороговым значением
+                # Comparison of OI change with threshold value
                 if delta_oi > self.threshold:
 
-                    count_signal = 0  # количество сигналов за последние сутки
-                    start_date = coin[0]['timestamp']
-                    end_date = coin[i]['timestamp']
+                    count_signal = 0                     # number of signals in the last 24 hours
+                    start_date = coin[i]['timestamp']    # the latest data
+                    end_date = coin[0]['timestamp']      # the oldest data
 
-                    # Скачиваем исторические данные по цене и объему на периоде, где выполнилось условие по OI
-                    signal_coin_price_volume = await self.client.fetch_ohlcv(coin[0]['symbol'], start_date, end_date, str(self.interval))
-                    print("signal_coin_price_volume = ",signal_coin_price_volume)
-                    # Если данные пустые или пришла ошибка, пропускаем итерацию
+
+                    # Downloading historical data on price and volume for the period where the OI condition was met
+                    try:
+                        signal_coin_price_volume = await self.client.fetch_ohlcv(coin[0]['symbol'], start_date, end_date, str(self.interval))
+                    except Exception as e:
+                        print(f"Error while getting OHLCV: {e}")
+                        continue
+
+                    # If the data is empty or an error occurs, skip the iteration
                     if not signal_coin_price_volume or len(signal_coin_price_volume) < 2:
                         continue
 
-                    # Добавляем данные о сигнале в БД
+                    signal_coin_price_volume = self.sort_by_timestamp_reverse(signal_coin_price_volume)
+
+
+                    # Adding signal data to the DB
                     await add_signal_in_db(symbol, exchange_name, self.threshold_period, self.threshold, delta_oi, start_date)
-                    # Подсчитываем количество сигналов в БД
+                    # Counting the number of signals for this symbol in the DB
+                    # Correct value of 'count_signal' if the screener works for more than a day without interruption
                     count_signal = await count_symbol_in_db(symbol, exchange_name, self.threshold_period, self.threshold)
-                    print("count_signal первый вызов = ",count_signal)
 
-
-
-                    # Если единственный сигнал, открываем суточную историю и подсчитываем количество сигналов.
-                    if count_signal == 1:
-                        new_count_signal = 0
-                        historical_oi = await get_historical_oi(symbol, exchange_name, end_date)
-                        print("Выполнилось условие if count_signal == 1:")
-                        print('historical_oi = ',historical_oi)
-                        print('len(historical_oi) = ', len(historical_oi))
-
-                        for j in range(len(historical_oi)-self.limit+1):
-                            for k in range(1, self.limit):
-                                delta_historical_oi = self.delta_calculate(historical_oi[j]['open_interest'], historical_oi[j-k]['open_interest'])
-                                if delta_historical_oi > self.threshold:
-                                    new_count_signal += 1
-                                    print("new_count_signal в цикле = ", count_signal)
-                                    await add_signal_in_db(symbol, exchange_name, self.threshold_period, self.threshold,
-                                                           delta_historical_oi, historical_oi[j]['timestamp'])
-                                    break
-                        if new_count_signal > 0:
-                            count_signal = new_count_signal
-
-
-
-                    delta_price = self.delta_calculate(signal_coin_price_volume[-1]['close'], signal_coin_price_volume[0]['close'])
-                    delta_volume = self.delta_calculate(signal_coin_price_volume[-1]['volume'], signal_coin_price_volume[0]['volume'])
+                    delta_price = self.delta_calculate(signal_coin_price_volume[0]['close'], signal_coin_price_volume[i]['close'])
+                    delta_volume = self.delta_calculate(signal_coin_price_volume[0]['volume'], signal_coin_price_volume[i]['volume'])
+                    if delta_price is None or delta_volume is None:
+                        continue
                     formatted_delta_price = f"{delta_price * 100:.2f}%"
                     formatted_delta_volume = f"{delta_volume * 100:.2f}%"
 
-                    delta_time = coin[i]['datetime'] - coin[0]['datetime']
+                    if not isinstance(coin[0]['datetime'], datetime) or not isinstance(coin[i]['datetime'], datetime):
+                        print("Incorrect datetime format")
+                        continue
+                    delta_time = coin[0]['datetime'] - coin[i]['datetime']
                     delta_minutes = delta_time.total_seconds() / 60
 
-                    # формируем выходные данные по конкретному сигналу
+                    # generation of output data for a specific signal
                     is_signal_coin = {
                         'exchange': exchange_name,
                         'symbol': symbol,
-                        'timestamp': coin[i]['timestamp'],
+                        'timestamp': start_date,
                         'datetime': coin[i]['datetime'],
                         'delta_oi_%': formatted_delta_oi,
                         'delta_price_%': formatted_delta_price,
@@ -139,12 +128,11 @@ class ConditionHandler:
                         'threshold': self.threshold
                     }
 
-                    # Добавляем в долговременную БД запись о сигнале
-                    await add_signal_in_total_db(symbol, exchange_name, coin[i]['timestamp'], delta_oi,
+                    # Adding a signal record to the long-term database
+                    await add_signal_in_total_db(symbol, exchange_name, start_date, delta_oi,
                                                      delta_price, delta_volume,
                                                      self.threshold_period, self.threshold)
 
-                    # Собираем все сигналы по одной бирже в одном списке
                     signal_coins.append(is_signal_coin)
                     break
 

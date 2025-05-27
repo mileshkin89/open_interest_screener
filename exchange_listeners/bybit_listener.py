@@ -1,9 +1,7 @@
 import aiohttp
 from datetime import datetime
 from exchange_listeners.base_listener import BaseExchangeListener
-#import asyncio
 
-#5min 15min 30min 1h 4h 1d
 
 class BybitListener(BaseExchangeListener):
 
@@ -26,24 +24,22 @@ class BybitListener(BaseExchangeListener):
                 ]
                 return symbols
 
-    async def fetch_oi(self, symbol: str, interval: str = "5", limit: int = 5) -> list[dict]:
+    async def fetch_oi(self, symbol: str, interval: str = "5", limit: int = 7) -> list[dict]:
         """Fetch historical open interest"""
         url = f"https://api.bybit.com/v5/market/open-interest"
         symbol = symbol.upper()
-        interval = interval+"min"
         result = []
 
         params = {
             "category": "linear",
             "symbol": symbol,
-            "intervalTime": interval,
+            "intervalTime": interval+"min",
             "limit": str(limit)
         }
 
         async with aiohttp.ClientSession() as session:
             async with session.get(url, params=params) as resp:
                 data = await resp.json()
-                #print("data", data)
 
                 if not isinstance(data, dict) or data.get("retCode") != 0:
                     return [{"error": data}]
@@ -57,9 +53,7 @@ class BybitListener(BaseExchangeListener):
                         "datetime": dt,
                         "timestamp": timestamp,
                         "open_interest": float(entry['openInterest']),
-                        #"OpenInterestValue": float(entry['openInterestValue'])
                     }
-                    #print("coin = ",coin)
                     result.append(coin)
         return result
 
@@ -68,10 +62,6 @@ class BybitListener(BaseExchangeListener):
         """Fetch OHLCV data for given time range"""
         url = "https://api.bybit.com/v5/market/kline"
 
-        print("BYBIT")
-        print("start_date = ", start_date)
-        print("end_date   = ", end_date)
-
         params = {
             "category": "linear",
             "symbol": symbol.upper(),
@@ -79,25 +69,21 @@ class BybitListener(BaseExchangeListener):
             "start": int(start_date),
             "end": int(end_date),
         }
-
         result = []
 
         async with aiohttp.ClientSession() as session:
             async with session.get(url, params=params) as resp:
                 data = await resp.json()
-                print("Bybit response:", data)
 
                 if not isinstance(data, dict) or data.get("retCode") != 0:
                     return [{"error": data}]
 
                 for candle in data["result"]["list"]:
-                   # print("candle = ",candle)
                     result.append({
                         "timestamp": int(candle[0]),
                         "close": float(candle[4]),
                         "volume": float(candle[5]),
                     })
 
-        print("result = ",result)
         return result
 
