@@ -1,6 +1,7 @@
 # cond_handler.py
 
 import asyncio
+import aiohttp
 from datetime import datetime
 from exchange_listeners.base_listener import BaseExchangeListener
 from db.bd import add_signal_in_db, count_symbol_in_db, add_signal_in_total_db
@@ -68,9 +69,16 @@ class ConditionHandler:
 
 
     async def fetch_oi_data(self) -> list:
-        tasks = [self.client.fetch_oi(symbol.upper(), self.interval, self.limit) for symbol in self.symbols]
-        coins = await asyncio.gather(*tasks, return_exceptions=True)
-        return [coin for coin in coins if not isinstance(coin, Exception)]
+        _session = aiohttp.ClientSession()
+        try:
+            tasks = [
+                self.client.fetch_oi(symbol.upper(), self.interval, self.limit, _session)
+                for symbol in self.symbols
+            ]
+            coins = await asyncio.gather(*tasks, return_exceptions=True)
+            return [coin for coin in coins if not isinstance(coin, Exception)]
+        finally:
+            await _session.close()
 
 
     async def process_coin_data(self, coin: list[dict]) -> dict | None:
@@ -94,11 +102,14 @@ class ConditionHandler:
         start_date = coin[i]['timestamp']
         end_date = coin[0]['timestamp']
 
+        _session = aiohttp.ClientSession()
         try:
-            ohlcv = await self.client.fetch_ohlcv(symbol, start_date, end_date, str(self.interval))
+            ohlcv = await self.client.fetch_ohlcv(symbol, start_date, end_date, str(self.interval), _session)
         except Exception as e:
             print(f"Error while getting OHLCV: {e}")
             return None
+        finally:
+            await _session.close()
 
         if not ohlcv or len(ohlcv) < 2:
             return None
