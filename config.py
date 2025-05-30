@@ -12,10 +12,11 @@ load_dotenv()
 
 
 class AppConfig(BaseSettings):
-    DB_PATH: Path = BASE_DIR / "storage" / "signals.db"
-    DB_PATH.parent.mkdir(parents=True, exist_ok=True)
-
     TG_BOT_API_KEY: str = os.getenv("TG_BOT_API_KEY")
+
+    DB_PATH: Path = BASE_DIR / "storage" / "signals.db"
+
+    LOG_PATH: Path = BASE_DIR / "logs" / "app.log"
 
     model_config = SettingsConfigDict(
         env_file=str(BASE_DIR / ".env"),

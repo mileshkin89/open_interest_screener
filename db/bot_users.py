@@ -1,6 +1,8 @@
 import aiosqlite
 from config import config
 
+config.DB_PATH.parent.mkdir(parents=True, exist_ok=True)
+
 
 async def init_db():
     async with aiosqlite.connect(config.DB_PATH) as db:
