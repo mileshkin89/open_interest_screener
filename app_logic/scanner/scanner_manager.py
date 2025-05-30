@@ -1,7 +1,7 @@
 # bot/scanner_manager.py
 
 import asyncio
-from scanner_init import scanner_
+from .scanner_init import scanner_  #app_logic.scanner.
 
 
 running_scanners = {}  # user_id: {"task": task, "settings": {...}}

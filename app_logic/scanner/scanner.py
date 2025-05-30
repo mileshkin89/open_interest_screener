@@ -3,10 +3,14 @@
 import asyncio
 from datetime import datetime
 import traceback
-from cond_handler import ConditionHandler
+from app_logic.condition_handler import ConditionHandler
 from exchange_listeners.listener_manager import ListenerManager
 from db.hist_signal_db import init_db, trim_signal_bd, trim_history_bd
+from logging_config import get_logger
 
+logger = get_logger(__name__)
+#logger.exception(f"Unexpected error during conversion convert_text_to_file(): {e}")
+#logger.warning(f"Invalid format selected convert_text_to_file(): {e}")
 
 class Scanner:
     def __init__(self, manager: ListenerManager, handler: ConditionHandler):

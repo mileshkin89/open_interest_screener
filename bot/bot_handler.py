@@ -12,7 +12,7 @@ from config import config
 from bot.keyboards import main_menu
 from bot.states import ScreenerSettings
 from db.bot_users import init_db, get_user_settings, update_user_settings
-from scanner_manager import start_or_restart_scanner
+from app_logic import start_or_restart_scanner  #.scanner.scanner_manager
 
 
 dp = Dispatcher(storage=MemoryStorage())
