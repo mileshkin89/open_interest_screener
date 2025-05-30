@@ -5,7 +5,7 @@ from datetime import datetime
 import traceback
 from cond_handler import ConditionHandler
 from exchange_listeners.listener_manager import ListenerManager
-from db.bd import init_db, trim_signal_bd
+from db.hist_signal_db import init_db, trim_signal_bd, trim_history_bd
 
 
 class Scanner:
@@ -28,6 +28,7 @@ class Scanner:
                 now_timestamp = int(datetime.now().timestamp())
                 try:
                     await trim_signal_bd(now_timestamp)  # removing signals older than a day
+                    await trim_history_bd(now_timestamp) # removing history older than a day
                 except Exception as e:
                     print(f"Database cleanup error: {e}")
                     traceback.print_exc()
