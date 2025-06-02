@@ -1,5 +1,6 @@
 import aiosqlite
 from config import config
+from app_logic.default_settings import DEFAULT_SETTINGS
 
 config.DB_PATH.parent.mkdir(parents=True, exist_ok=True)
 
@@ -32,7 +33,7 @@ async def update_user_settings(user_id: int, period=None, threshold=None):
         if existing is None:
             await db.execute(
                 "INSERT INTO user_settings (user_id, period, threshold) VALUES (?, ?, ?)",
-                (user_id, period or 15, threshold or 0.02)
+                (user_id, period or DEFAULT_SETTINGS["period"], threshold or DEFAULT_SETTINGS["threshold"])
             )
         else:
             new_period = period if period is not None else existing["period"]
