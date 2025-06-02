@@ -21,16 +21,8 @@ settings_menu = InlineKeyboardMarkup(
 
 exchanges_menu = InlineKeyboardMarkup(
     inline_keyboard=[
-        [InlineKeyboardButton(text="Binance", callback_data="binance_on"),
-        InlineKeyboardButton(text="Bybit", callback_data="bybit_on")],
+        [InlineKeyboardButton(text="🟢 Binance", callback_data="binance_on"),
+        InlineKeyboardButton(text="🟢 Bybit", callback_data="bybit_on")],
         [InlineKeyboardButton(text="Run scanner", callback_data="start_scanner")]
     ]
 )
-
-# main_menu = InlineKeyboardMarkup(
-#     inline_keyboard=[
-#         [InlineKeyboardButton(text="Период роста", callback_data="set_period")],
-#         [InlineKeyboardButton(text="Процент роста", callback_data="set_threshold")],
-#         [InlineKeyboardButton(text="Запустить сканер", callback_data="start_scanner")]
-#     ]
-# )

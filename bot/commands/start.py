@@ -11,7 +11,6 @@ from bot.bot_init import bot
 from bot.commands.settings import show_settings_menu
 from bot.commands.exchanges import show_exchanges_menu
 
-
 router = Router()
 
 
@@ -26,7 +25,6 @@ async def cmd_start(message: Message, state: FSMContext):
         reply_markup=start_menu
     )
 
-
 @router.callback_query(F.data == "jump_settings")
 async def jump_settings_menu(callback: CallbackQuery):
     await callback.answer()
@@ -39,11 +37,11 @@ async def jump_exchanges_menu(callback: CallbackQuery):
     await show_exchanges_menu(callback.message)
 
 
-
 @router.callback_query(F.data == "start_scanner")
 async def start_scan(callback: CallbackQuery):
     user_id = callback.from_user.id
     settings = await get_user_settings(user_id)
+    exchanges = settings["active_exchanges"]
 
     if settings is None:
         settings = DEFAULT_SETTINGS.copy()
@@ -58,17 +56,21 @@ async def start_scan(callback: CallbackQuery):
         await asyncio.sleep(0.3)
         await bot.send_message(chat_id=user_id, text=msg)
 
-    status = await start_or_restart_scanner(user_id, settings, notify)
+    status = await start_or_restart_scanner(user_id, settings, exchanges, notify)
+
+    exchanges_str = ", ".join(f"'{name.capitalize()}'" for name in exchanges)
 
     if status == "already_running":
         await callback.message.answer(
-            f"ℹ️ The scanner is already running with these settings:\n"
+            f"ℹ️ The scanner is already running with these settings:\n\n"
             f"Period: {settings['period']} minutes\n"
-            f"Threshold: {settings['threshold'] * 100:.2f}%"
+            f"Threshold: {settings['threshold'] * 100:.2f}%\n"
+            f"Active exchanges: {exchanges_str}"
         )
     elif status == "started":
         await callback.message.answer(
-            f"✅ The scanner has been launched with new settings:\n"
+            f"✅ The scanner has been launched with new settings:\n\n"
             f"Period: {settings['period']} minutes\n"
-            f"Threshold: {settings['threshold'] * 100:.2f}%"
+            f"Threshold: {settings['threshold'] * 100:.2f}%\n"
+            f"Active exchanges: {exchanges_str}"
         )
