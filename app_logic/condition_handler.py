@@ -163,7 +163,7 @@ class ConditionHandler:
             'exchange': exchange_name,
             'symbol': symbol,
             'timestamp': start_date,
-            'datetime': coin[i]['datetime'],
+            'datetime': coin[0]['datetime'],
             'delta_oi_%': self.format_delta(delta_oi),
             'delta_price_%': self.format_delta(delta_price),
             'delta_volume_%': self.format_delta(delta_volume),

@@ -4,7 +4,7 @@ from aiogram.types import Message, CallbackQuery
 
 from bot.keyboards import settings_menu
 from bot.states import ScreenerSettings
-from db.bot_users import get_user_settings, update_user_settings  # init_db,
+from db.bot_users import get_user_settings, update_user_settings
 from app_logic.default_settings import DEFAULT_SETTINGS
 
 
@@ -24,7 +24,7 @@ async def show_settings_menu(target):
 
 @router.message(F.text == "/settings")
 async def cmd_settings(message: Message, state: FSMContext):
-    await show_settings_menu(message.message)
+    await show_settings_menu(message)
 
 
 @router.callback_query(F.data == "set_period")
@@ -36,9 +36,15 @@ async def set_period(callback: CallbackQuery, state: FSMContext):
 @router.message(ScreenerSettings.waiting_for_period)
 async def process_period(message: Message, state: FSMContext):
     try:
-        period = int(message.text)
+        text = message.text.strip()
+
+        if not text.isdigit():
+            await message.answer("❌ Please enter a integer number from 5 to 30.")
+            return
+
+        period = int(text)
         if not 5 <= period <= 30:
-            raise ValueError("The period should be from 5 to 30 minutes")
+            raise ValueError(f"❌ The period should be integer number from 5 to 30")
 
         user_id = message.from_user.id
 
@@ -63,9 +69,15 @@ async def set_threshold(callback: CallbackQuery, state: FSMContext):
 @router.message(ScreenerSettings.waiting_for_threshold)
 async def process_threshold(message: Message, state: FSMContext):
     try:
-        threshold = float(message.text.replace(",", "."))
-        if not 0.01 <= threshold <= 100:
-            raise ValueError("The percentage must be between 0.01 and 100")
+        text = message.text.strip()
+
+        if not text.isdigit():
+            await message.answer("❌ Please enter a integer number from 0 to 100.")
+            return
+
+        threshold = float(text)
+        if not 0 <= threshold <= 100:
+            raise ValueError("❌ The percentage must be integer number between 0 and 100.")
         threshold = threshold / 100
 
         user_id = message.from_user.id
@@ -75,7 +87,7 @@ async def process_threshold(message: Message, state: FSMContext):
 
         await update_user_settings(user_id, period=period, threshold=threshold)
 
-        await message.answer(f"Growth threshold set: {threshold * 100:.2f}%")
+        await message.answer(f"✅ Growth threshold set: {threshold * 100:.2f}%")
         await state.clear()
 
     except ValueError as e:
