@@ -5,7 +5,7 @@ from datetime import datetime
 import traceback
 from app_logic.condition_handler import ConditionHandler
 from exchange_listeners.listener_manager import ListenerManager
-from db.hist_signal_db import init_db, trim_signal_bd, trim_history_bd
+from db.hist_signal_db import init_db, trim_old_records
 from logging_config import get_logger
 
 logger = get_logger(__name__)
@@ -20,7 +20,7 @@ class Scanner:
         self.symbols_by_exchange: dict[str, list[str]] = {}
 
 
-    async def run_scanner(self, notify_callback, threshold_period: int = 15, threshold: float = 0.05):
+    async def run_scanner(self, user_id, notify_callback, threshold_period: int = 15, threshold: float = 0.05):
         await init_db()
         while True:
 
@@ -31,8 +31,9 @@ class Scanner:
 
                 now_timestamp = int(datetime.now().timestamp())
                 try:
-                    await trim_signal_bd(now_timestamp)  # removing signals older than a day
-                    await trim_history_bd(now_timestamp) # removing history older than a day
+                    # removing signals and history older than a day
+                    await trim_old_records("signals_temp", now_timestamp)
+                    await trim_old_records("history_temp", now_timestamp)
                 except Exception as e:
                     print(f"Database cleanup error: {e}")
                     traceback.print_exc()
@@ -78,7 +79,7 @@ class Scanner:
                             f"\nNumber of signals per day: {coin['count_signal_24h']}"
                         )
                         print(msg)
-                        await notify_callback(msg)
+                        await notify_callback(user_id, msg)
                 else:
                     print(f"[{exchange_name.upper()}] No signal.")
 
