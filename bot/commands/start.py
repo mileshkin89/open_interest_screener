@@ -2,14 +2,15 @@ import asyncio
 from aiogram import F, Router
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message, CallbackQuery
-
 from bot.keyboards import start_menu
 from db.bot_users import get_user_settings, update_user_settings
 from app_logic import start_or_restart_scanner
+from app_logic.user_activity import mark_user_active
 from app_logic.default_settings import DEFAULT_SETTINGS
-from bot.bot_init import bot
 from bot.commands.settings import show_settings_menu
 from bot.commands.exchanges import show_exchanges_menu
+from bot. msg_sender import notify
+
 
 router = Router()
 
@@ -24,6 +25,8 @@ async def cmd_start(message: Message, state: FSMContext):
         " or your current settings if set",
         reply_markup=start_menu
     )
+    user_id = message.from_user.id
+    mark_user_active(user_id)
 
 @router.callback_query(F.data == "jump_settings")
 async def jump_settings_menu(callback: CallbackQuery):
@@ -40,6 +43,7 @@ async def jump_exchanges_menu(callback: CallbackQuery):
 @router.callback_query(F.data == "start_scanner")
 async def start_scan(callback: CallbackQuery):
     user_id = callback.from_user.id
+    mark_user_active(user_id)
     settings = await get_user_settings(user_id)
     exchanges = settings["active_exchanges"]
 
@@ -51,10 +55,6 @@ async def start_scan(callback: CallbackQuery):
             settings["period"] = DEFAULT_SETTINGS["period"]
         if "threshold" not in settings:
             settings["threshold"] = DEFAULT_SETTINGS["threshold"]
-
-    async def notify(msg: str):
-        await asyncio.sleep(0.3)
-        await bot.send_message(chat_id=user_id, text=msg)
 
     status = await start_or_restart_scanner(user_id, settings, exchanges, notify)
 

@@ -1,7 +1,7 @@
 from aiogram import F, Router
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message, CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton
-
+from app_logic.user_activity import mark_user_active
 from bot.keyboards import exchanges_menu
 from db.bot_users import get_user_settings, update_user_settings
 
@@ -16,6 +16,9 @@ async def show_exchanges_menu(target):
         "When you\'re ready, press 'Run scanner' to start with your current settings.",
         reply_markup=exchanges_menu
         )
+    user_id = target.from_user.id
+    mark_user_active(user_id)
+
 
 @router.message(F.text == "/exchanges")
 async def cmd_exchanges(message: Message, state: FSMContext):
@@ -25,6 +28,7 @@ async def cmd_exchanges(message: Message, state: FSMContext):
 @router.callback_query(F.data.in_({"binance_on", "bybit_on"}))
 async def toggle_exchange(callback: CallbackQuery):
     user_id = callback.from_user.id
+    mark_user_active(user_id)
     settings = await get_user_settings(user_id)
     active = set(settings["active_exchanges"])
     exchange = callback.data.split("_")[0]

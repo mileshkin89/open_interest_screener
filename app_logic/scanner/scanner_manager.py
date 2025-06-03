@@ -29,6 +29,6 @@ async def start_or_restart_scanner(user_id: int, settings: dict, exchanges: list
     scanner_ = Scanner(manager=manager, handler=cond)
 
     # Launching a new
-    task = asyncio.create_task(scanner_.run_scanner(notify_func, settings["period"], settings["threshold"]))
+    task = asyncio.create_task(scanner_.run_scanner(user_id, notify_func, settings["period"], settings["threshold"]))
     running_scanners[user_id] = {"task": task, "settings": settings}
     return "started"

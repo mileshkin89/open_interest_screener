@@ -84,19 +84,11 @@ async def count_symbol_in_db(symbol: str, exchange: str, threshold_period: int, 
             return result[0] if result else 0
 
 
-async def trim_signal_bd(current_timestamp: int):
-    threshold = (current_timestamp - 24 * 60 * 60) * 1000  # 24 hours ago
+async def trim_old_records(table_name: str, current_timestamp: int, days: int = 1):
+    threshold_timestamp = (current_timestamp - days * 24 * 60 * 60) * 1000
     async with aiosqlite.connect(config.DB_PATH) as db:
-        await db.execute("DELETE FROM signals_temp WHERE timestamp < ?", (threshold,))
+        await db.execute(f"DELETE FROM {table_name} WHERE  timestamp < ?", (threshold_timestamp,))
         await db.commit()
-
-
-async def trim_history_bd(current_timestamp: int):
-    threshold = (current_timestamp - 24 * 60 * 60) * 1000  # 24 hours ago
-    async with aiosqlite.connect(config.DB_PATH) as db:
-        await db.execute("DELETE FROM history_temp WHERE timestamp < ?", (threshold,))
-        await db.commit()
-
 
 
 async def add_signal_in_total_db(symbol: str, exchange: str, timestamp: int, delta_oi: float,
