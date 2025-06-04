@@ -1,6 +1,10 @@
 from exchange_listeners.binance_listener import BinanceListener
 from exchange_listeners.bybit_listener import BybitListener
 from typing import Any
+from logging_config import get_logger
+
+logger = get_logger(__name__)
+
 
 class ListenerManager:
     def __init__(self, enabled_exchanges: list[str]):
@@ -18,7 +22,7 @@ class ListenerManager:
             else:
                 raise ValueError(f"Exchange '{exchange_name}' is not activated in ListenerManager.")
         except ValueError as e:
-            print(f"Exchange not available. {e}")
+            logger.error(f"Exchange not available. {e}", exc_info=True)
 
     def get_all_active_listeners(self) -> list[dict]:
         return [{name: self.exchange_map[name]} for name in self.enabled_exchanges]
@@ -28,3 +32,5 @@ class ListenerManager:
 
     def get_all_listeners(self) -> dict:
         return self.exchange_map
+
+

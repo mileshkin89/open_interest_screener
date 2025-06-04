@@ -1,14 +1,18 @@
 # bot/scanner_manager.py
 
 import asyncio
+from typing import Callable
 from exchange_listeners.listener_manager import ListenerManager
 from app_logic.condition_handler import ConditionHandler
 from .scanner import Scanner
+from logging_config import get_logger
 
+logger = get_logger(__name__)
 
 running_scanners = {}  # user_id: {"task": task, "settings": {...}}
 
-async def start_or_restart_scanner(user_id: int, settings: dict, exchanges: list, notify_func):
+
+async def start_or_restart_scanner(user_id: int, settings: dict, exchanges: list, notify_func: Callable):
 
     current = running_scanners.get(user_id)
 
@@ -30,5 +34,6 @@ async def start_or_restart_scanner(user_id: int, settings: dict, exchanges: list
 
     # Launching a new
     task = asyncio.create_task(scanner_.run_scanner(user_id, notify_func, settings["period"], settings["threshold"]))
+    logger.info(f"User {user_id} started screener successfully. Settings: {settings}")
     running_scanners[user_id] = {"task": task, "settings": settings}
     return "started"

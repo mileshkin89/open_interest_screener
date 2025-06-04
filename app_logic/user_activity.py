@@ -8,6 +8,9 @@ from aiogram.types import CallbackQuery
 from bot.msg_sender import notify
 from app_logic.default_settings import INACTIVITY_DAYS, WAITING_DAYS
 from app_logic.scanner.scanner_manager import running_scanners
+from logging_config import get_logger
+
+logger = get_logger(__name__)
 
 router = Router()
 
@@ -19,10 +22,10 @@ def mark_user_active(user_id: int):
     user_activity[user_id] = datetime.now()
     pending_confirmation.pop(user_id, None)
     if user_id not in running_scanners:
-        print(f"[INFO] User {user_id} marked active, but no scanner is running.")
+        logger.debug(f"User {user_id} marked active, but no scanner is running.")
 
 
-async def send_confirmation_request(user_id: int, notify_func):
+async def send_confirmation_request(user_id: int):
     keyboard = InlineKeyboardMarkup(
         inline_keyboard=[
             [InlineKeyboardButton(text="❓ Сonfirm", callback_data=f"confirm:{user_id}")]
@@ -36,7 +39,7 @@ async def send_confirmation_request(user_id: int, notify_func):
     )
 
 
-async def monitor_user_activity(notify_func):
+async def monitor_user_activity():
     while True:
         now = datetime.now()
         for user_id, last_active in list(user_activity.items()):
@@ -52,14 +55,14 @@ async def monitor_user_activity(notify_func):
                         except asyncio.CancelledError:
                             pass
                         running_scanners.pop(user_id, None)
-                        print(f"[INFO] Scanner stopped for inactive user {user_id}.")
                         await notify(user_id, "❌ Scanner stopped.")
+                        logger.info(f"Scanner stopped for inactive user {user_id}.")
                     pending_confirmation.pop(user_id, None)
                     user_activity.pop(user_id, None)
                 continue
 
             if (now - last_active).days >= INACTIVITY_DAYS:
-                await send_confirmation_request(user_id, notify)
+                await send_confirmation_request(user_id)
                 pending_confirmation[user_id] = now
 
         await asyncio.sleep(86400)   #  1 day
@@ -71,3 +74,4 @@ async def handle_confirm_button(callback: CallbackQuery):
     mark_user_active(user_id)
     await callback.answer()
     await notify(user_id, "✅ Activity confirmed. The scanner will continue running.")
+    logger.info(f"Activity confirmed for user {user_id}")

@@ -35,7 +35,7 @@ def get_logger(name: str = __name__) -> logging.Logger:
 
         config.LOG_PATH.parent.mkdir(parents=True, exist_ok=True)
         file_handler = logging.FileHandler(config.LOG_PATH, encoding='utf-8')
-        file_handler.setLevel(logging.WARNING)
+        file_handler.setLevel(logging.INFO)
         file_formatter = logging.Formatter(
             "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
         )
