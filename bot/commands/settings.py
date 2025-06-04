@@ -7,13 +7,14 @@ from bot.states import ScreenerSettings
 from db.bot_users import get_user_settings, update_user_settings
 from app_logic.default_settings import DEFAULT_SETTINGS
 from app_logic.user_activity import mark_user_active
+from logging_config import get_logger
 
+logger = get_logger(__name__)
 
 router = Router()
 
 
 async def show_settings_menu(target):
-    """Показывает меню настроек: либо в ответ на message, либо callback."""
     await target.answer(
         "⚙️ Please select the screener settings:\n\n"
         "⏱️ <b>Period</b> – how many minutes to check for growth (5–30 min)\n"
@@ -63,6 +64,7 @@ async def process_period(message: Message, state: FSMContext):
 
     except ValueError as e:
         await message.answer(str(e))
+        logger.warning(f"Problem set period {user_id}: {e}")
 
 
 @router.callback_query(F.data == "set_threshold")
@@ -99,3 +101,4 @@ async def process_threshold(message: Message, state: FSMContext):
 
     except ValueError as e:
         await message.answer(str(e))
+        logger.warning(f"Problem set threshold {user_id}: {e}")

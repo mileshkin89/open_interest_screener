@@ -2,15 +2,16 @@
 
 import asyncio
 from datetime import datetime
-import traceback
+from typing import Callable
+
 from app_logic.condition_handler import ConditionHandler
 from exchange_listeners.listener_manager import ListenerManager
 from db.hist_signal_db import init_db, trim_old_records
+from app_logic.default_settings import DEFAULT_SETTINGS, MIN_INTERVAL, SLEEP_TIMER_SECOND
 from logging_config import get_logger
 
 logger = get_logger(__name__)
-#logger.exception(f"Unexpected error during conversion convert_text_to_file(): {e}")
-#logger.warning(f"Invalid format selected convert_text_to_file(): {e}")
+
 
 class Scanner:
     def __init__(self, manager: ListenerManager, handler: ConditionHandler):
@@ -20,23 +21,26 @@ class Scanner:
         self.symbols_by_exchange: dict[str, list[str]] = {}
 
 
-    async def run_scanner(self, user_id, notify_callback, threshold_period: int = 15, threshold: float = 0.05):
+    async def run_scanner(self, user_id, notify_callback: Callable,
+                          threshold_period: int = DEFAULT_SETTINGS["period"],
+                          threshold: float = DEFAULT_SETTINGS["threshold"]):
         await init_db()
         while True:
 
             now = datetime.now().date()
 
+            # Executed once a day:
             if now != self.last_day:
                 self.symbols_by_exchange.clear()
 
+                # Removing signals and history older than a day
                 now_timestamp = int(datetime.now().timestamp())
                 try:
-                    # removing signals and history older than a day
                     await trim_old_records("signals_temp", now_timestamp)
                     await trim_old_records("history_temp", now_timestamp)
+                    await trim_old_records("signals_total", now_timestamp, 7)
                 except Exception as e:
-                    print(f"Database cleanup error: {e}")
-                    traceback.print_exc()
+                    logger.error(f"Database cleanup error: {e}", exc_info=True)
 
                 # Downloading the current list of cryptocurrencies
                 for exchange in self.manager.get_all_active_listeners():
@@ -45,14 +49,13 @@ class Scanner:
                             if name != None and listener != None:
                                 symbols = await listener.fetch_usdt_symbols()
                                 self.symbols_by_exchange[name] = symbols
-                                print(f"{name.upper()} symbols: {len(symbols)}")
+                                logger.debug(f"{name.upper()} symbols: {len(symbols)}")
                         except Exception as e:
-                            print(f"Error receiving exchange {name}: {e}")
-                            traceback.print_exc()
+                            logger.error(f"Error receiving exchange {name}: {e}", exc_info=True)
 
                 self.last_day = now
 
-
+            # Executed every 5 minutes. Can be changed in SLEEP_TIMER_SECOND
             for exchange_name, symbols in self.symbols_by_exchange.items():
                 listener = self.manager.get_listener(exchange_name)
                 self.handler.set_client(listener)
@@ -61,13 +64,11 @@ class Scanner:
 
                 # Getting a list of cryptocurrencies for which a condition is met on a specific exchange
                 try:
-                    signal_coins = await self.handler.is_signal(symbols, threshold_period, "5", threshold)
+                    signal_coins = await self.handler.is_signal(symbols, threshold_period, MIN_INTERVAL, threshold)
                 except AttributeError as e:
-                    print(f"Error AttributeError: {e}")
-                    traceback.print_exc()
+                    logger.error(f"Error AttributeError: {e}", exc_info=True)
                 except Exception as e:
-                    print(f"Error: {e}")
-                    traceback.print_exc()
+                    logger.error(f"Error: {e}", exc_info=True)
 
                 if signal_coins:
                     for coin in signal_coins:
@@ -78,10 +79,9 @@ class Scanner:
                             f"\nOI {coin['delta_oi_%']},  price {coin['delta_price_%']},  volume {coin['delta_volume_%']}"
                             f"\nNumber of signals per day: {coin['count_signal_24h']}"
                         )
-                        print(msg)
+                        logger.debug(f"{msg}")
                         await notify_callback(user_id, msg)
                 else:
-                    print(f"[{exchange_name.upper()}] No signal.")
+                    logger.debug(f"[{exchange_name.upper()}] No signal.")
 
-            print("=" * 40)
-            await asyncio.sleep(300)
+            await asyncio.sleep(SLEEP_TIMER_SECOND)

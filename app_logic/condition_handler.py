@@ -2,10 +2,13 @@
 
 import asyncio
 import aiohttp
-import traceback
 from datetime import datetime
 from exchange_listeners.base_listener import BaseExchangeListener
+from app_logic.default_settings import DEFAULT_SETTINGS, MIN_INTERVAL
 from db.hist_signal_db import add_signal_in_db, count_symbol_in_db, add_signal_in_total_db, add_history_in_db, get_historical_oi
+from logging_config import get_logger
+
+logger = get_logger(__name__)
 
 AVAILABLE_INTERVAL = {
     "5": 5,
@@ -42,7 +45,11 @@ class ConditionHandler:
         return f"{value * 100:.2f}%"
 
 
-    async def is_signal(self, symbols: list, threshold_period: int = 15, interval: str = "5", threshold: float = 0.05):
+    async def is_signal(self, symbols: list,
+                        threshold_period: int = DEFAULT_SETTINGS["period"],
+                        interval: str = MIN_INTERVAL,
+                        threshold: float = DEFAULT_SETTINGS["threshold"]):
+
         self.symbols = symbols
         self.interval = interval
         self.threshold_period = threshold_period
@@ -51,15 +58,12 @@ class ConditionHandler:
 
         signal_coins = []
 
-        print("threshold_period = ",  self.threshold_period)
-        print(f"threshold = {self.threshold*100}%")
-
         # Download the OI data from exchange
         coins = await self.fetch_oi_data()
 
         for coin in coins:
             if isinstance(coin, Exception):
-                print(f"Error while receiving data: {coin}")
+                logger.warning(f"Error while receiving data: {coin}")
                 continue
 
             result = await self.process_coin_data(coin)
@@ -93,8 +97,7 @@ class ConditionHandler:
             try:
                 await add_history_in_db(symbol, exchange_name, coin[0]['timestamp'], coin[0]['open_interest'])
             except Exception as e:
-                print(f"Error saving history to database: {e}")
-                traceback.print_exc()
+                logger.error(f"Error saving history to database: {e}", exc_info=True)
 
             delta_oi = self.delta_calculate(coin[0]['open_interest'], coin[i]['open_interest'])
             if delta_oi is None or delta_oi <= self.threshold:
@@ -116,8 +119,7 @@ class ConditionHandler:
         try:
             ohlcv = await self.client.fetch_ohlcv(symbol, start_date, end_date, str(self.interval), _session)
         except Exception as e:
-            print(f"Error while getting OHLCV: {e}")
-            traceback.print_exc()
+            logger.error(f"Error while getting OHLCV: {e}", exc_info=True)
             return None
         finally:
             await _session.close()
@@ -134,7 +136,7 @@ class ConditionHandler:
             return None
 
         if not isinstance(coin[0]['datetime'], datetime) or not isinstance(coin[i]['datetime'], datetime):
-            print("Incorrect datetime format")
+            logger.warning("Incorrect datetime format")
             return None
 
         await add_signal_in_db(symbol, exchange_name, self.threshold_period, self.threshold, delta_oi, start_date)
@@ -145,8 +147,7 @@ class ConditionHandler:
             try:
                 _count_signal = await self.calculate_signal_from_history(symbol, exchange_name, int(start_date))
             except Exception as e:
-                print(f"Error calculate signal from history: {e}")
-                traceback.print_exc()
+                logger.error(f"Error calculate signal from history: {e}", exc_info=True)
             if _count_signal != 0:
                 count_signal = _count_signal
 
@@ -185,12 +186,8 @@ class ConditionHandler:
 
         for i in range(len(history_io) - (self.limit - 1)):
             for j in range(1, self.limit):
-                print("Вход перед условием")
                 if history_io[i]['timestamp'] - history_io[i + j]['timestamp'] != j * AVAILABLE_INTERVAL[self.interval] * 60 * 1000:
-                    print(history_io[i]['timestamp'] - history_io[i + j]['timestamp'])
-                    print(j * AVAILABLE_INTERVAL[self.interval] * 60 * 1000)
                     continue
-                print("После условия")
 
                 delta_io = self.delta_calculate(history_io[i]['open_interest'], history_io[i + j]['open_interest'])
 
