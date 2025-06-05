@@ -1,3 +1,18 @@
+"""
+main.py
+
+Entry point of the Telegram bot application.
+
+This module:
+- Initializes the database.
+- Sets up Telegram bot commands.
+- Starts the user activity monitor.
+- Registers all command routers.
+- Starts the bot polling loop.
+
+Designed for asynchronous execution using asyncio.
+"""
+
 import asyncio
 from bot.bot_init import bot, dp
 from bot.menu import set_commands
@@ -11,16 +26,28 @@ logger = get_logger(__name__)
 
 
 async def main():
+    """
+    Main asynchronous function that initializes and starts the bot.
+
+    - Initializes the SQLite database for storing user settings.
+    - Sets bot commands for the Telegram interface.
+    - Launches a background task to monitor inactive users.
+    - Registers command handlers (routers) for user interaction.
+    - Clears any pending updates and starts polling the Telegram API.
+    """
     await init_db()
     await set_commands()
 
+    # Start user activity monitor in the background (checks for inactive users)
     asyncio.create_task(monitor_user_activity())
 
+    # Register command routers
     dp.include_router(start.router)
     dp.include_router(settings.router)
     dp.include_router(exchanges.router)
     dp.include_router(user_activity.router)
 
+    # Start polling the Telegram API
     await bot.delete_webhook(drop_pending_updates=True)
     await dp.start_polling(bot)
 
