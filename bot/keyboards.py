@@ -1,4 +1,15 @@
-# bot/keyboards.py
+"""
+keyboards.py
+
+Defines inline keyboard layouts used in the Telegram bot interface.
+These keyboards provide users with interactive buttons for navigation
+and configuration of the scanner's settings and exchanges.
+
+Exports:
+    - start_menu: Main menu with navigation to settings and exchanges, and option to run scanner.
+    - settings_menu: Menu for adjusting scanner parameters like period and threshold.
+    - exchanges_menu: Menu for enabling/disabling supported exchanges and starting the scanner.
+"""
 
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 

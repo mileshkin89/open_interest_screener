@@ -1,4 +1,23 @@
-# scanner.py
+"""
+scanner.py
+
+Module that defines the Scanner class, which periodically fetches market data from different
+exchanges via listeners, checks for trading signals using given conditions, and triggers
+notifications when such signals occur.
+
+The scanner:
+- Initializes database and trims outdated data.
+- Fetches up-to-date USDT trading pairs for each exchange.
+- Periodically checks conditions using a condition handler.
+- Sends notifications through a callback when signals are found.
+
+Classes:
+    Scanner: Manages periodic market scanning and signal detection per user.
+
+Requires:
+    - Initialized `ListenerManager` and `ConditionHandler` instances.
+    - Asynchronous environment for continuous execution.
+"""
 
 import asyncio
 from datetime import datetime
@@ -14,16 +33,53 @@ logger = get_logger(__name__)
 
 
 class Scanner:
+    """
+    Class responsible for periodically scanning multiple exchanges for trading signals.
+
+    Attributes:
+        manager (ListenerManager): Manages access to exchange listeners.
+        handler (ConditionHandler): Applies signal-checking logic to exchange data.
+        last_day (date): The last date the daily operations were performed.
+        symbols_by_exchange (dict[str, list[str]]): Maps exchange names to their trading symbols.
+    """
     def __init__(self, manager: ListenerManager, handler: ConditionHandler):
+        """
+        Initializes the Scanner with exchange manager and signal handler.
+
+        Args:
+            manager (ListenerManager): Instance managing exchange listeners.
+            handler (ConditionHandler): Logic handler to check if signal conditions are met.
+        """
         self.manager = manager
         self.handler = handler
         self.last_day = None
         self.symbols_by_exchange: dict[str, list[str]] = {}
 
 
-    async def run_scanner(self, user_id, notify_callback: Callable,
+    async def run_scanner(self,
+                          user_id,
+                          notify_callback: Callable,
                           threshold_period: int = DEFAULT_SETTINGS["period"],
                           threshold: float = DEFAULT_SETTINGS["threshold"]):
+        """
+        Runs the scanner loop to detect signals and notify the user if any are found.
+
+        This method:
+            - Initializes the database on the first run.
+            - Cleans up old signal data once per day.
+            - Refreshes the list of symbols for each active exchange daily.
+            - Every fixed interval (e.g., 5 minutes), checks for signals.
+            - If signals are found, sends them via the notify_callback function.
+
+        Args:
+            user_id (int): Telegram user ID to whom the alerts will be sent.
+            notify_callback (Callable): Async function used to send signal messages to the user.
+            threshold_period (int, optional): Time period to measure open interest change. Defaults to config value.
+            threshold (float, optional): Minimum open interest change (in percent) to trigger a signal. Defaults to config value.
+
+        Raises:
+            Exception: Logs errors if fetching data, cleaning DB, or processing conditions fails.
+        """
         await init_db()
         while True:
 
@@ -33,12 +89,10 @@ class Scanner:
             if now != self.last_day:
                 self.symbols_by_exchange.clear()
 
-                # Removing signals and history older than a day
+                # Removing history older than a day
                 now_timestamp = int(datetime.now().timestamp())
                 try:
-                    await trim_old_records("signals_temp", now_timestamp)
                     await trim_old_records("history_temp", now_timestamp)
-                    await trim_old_records("signals_total", now_timestamp, 7)
                 except Exception as e:
                     logger.error(f"Database cleanup error: {e}", exc_info=True)
 

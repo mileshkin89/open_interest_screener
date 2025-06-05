@@ -1,5 +1,15 @@
+"""
+exchange.py
+
+Handlers and UI logic for managing user-selected exchanges in the Telegram bot.
+
+Includes:
+- `/exchanges` command to open the exchange selection menu.
+- Callback handlers for enabling/disabling specific exchanges.
+- Dynamic inline keyboard generation reflecting current user preferences.
+"""
+
 from aiogram import F, Router
-from aiogram.fsm.context import FSMContext
 from aiogram.types import Message, CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton
 from app_logic.user_activity import mark_user_active
 from bot.keyboards import exchanges_menu
@@ -10,6 +20,12 @@ router = Router()
 
 
 async def show_exchanges_menu(target):
+    """
+    Sends a message with an inline keyboard allowing the user to select active exchanges.
+
+    Args:
+        target (Message | CallbackQuery): The object used to reply (either a message or callback).
+    """
     await target.answer(
         "🌐 Select the exchanges you want to monitor:\n\n"
         "Click on an exchange to enable or disable it.\n"
@@ -21,12 +37,25 @@ async def show_exchanges_menu(target):
 
 
 @router.message(F.text == "/exchanges")
-async def cmd_exchanges(message: Message, state: FSMContext):
+async def cmd_exchanges(message: Message):
+    """
+    Handler for the `/exchanges` command.
+
+    Displays the exchange selection menu to the user.
+    """
     await show_exchanges_menu(message)
 
 
 @router.callback_query(F.data.in_({"binance_on", "bybit_on"}))
 async def toggle_exchange(callback: CallbackQuery):
+    """
+    Toggles the activation status of a selected exchange.
+
+    Updates the user's active exchange list and updates the inline keyboard.
+
+    Args:
+        callback (CallbackQuery): Callback data triggered when user clicks on an exchange button.
+    """
     user_id = callback.from_user.id
     mark_user_active(user_id)
     settings = await get_user_settings(user_id)
@@ -46,6 +75,15 @@ async def toggle_exchange(callback: CallbackQuery):
 
 
 def generate_exchange_keyboard(active_exchanges: list[str]) -> InlineKeyboardMarkup:
+    """
+    Creates an inline keyboard showing active/inactive status of available exchanges.
+
+    Args:
+        active_exchanges (list[str]): List of currently active exchanges for the user.
+
+    Returns:
+        InlineKeyboardMarkup: A keyboard with toggle buttons for each exchange and a 'Run scanner' button.
+    """
     def button_text(name):
         return f"{'🟢' if name in active_exchanges else '🔴'} {name.capitalize()}"
 

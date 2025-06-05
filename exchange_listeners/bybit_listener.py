@@ -1,3 +1,16 @@
+"""
+bybit_listener.py
+
+Provides an implementation of the BaseExchangeListener interface for Bybit Futures.
+
+This module enables asynchronous retrieval of:
+- USDT-margined perpetual futures symbols
+- Historical Open Interest (OI) data
+- Historical OHLCV (candlestick) data
+
+The class interacts with the official Bybit REST API and includes error logging.
+"""
+
 import aiohttp
 import asyncio
 from datetime import datetime
@@ -9,10 +22,19 @@ logger = get_logger(__name__)
 
 
 class BybitListener(BaseExchangeListener):
+    """
+    Exchange listener for Bybit Futures that implements methods to fetch market data.
+    """
     BASE_URL = "https://api.bybit.com"
 
+
     async def fetch_usdt_symbols(self) -> list[str]:
-        """Get all USDT perpetual pairs from Bybit"""
+        """
+        Retrieve all available USDT-margined perpetual futures trading pairs from Bybit.
+
+        Returns:
+            list[str]: A list of symbol strings (e.g., ["BTCUSDT", "ETHUSDT"]).
+        """
         url = f"{self.BASE_URL}/v5/market/instruments-info"
         params = {"category": "linear"}
         symbols = []
@@ -44,7 +66,18 @@ class BybitListener(BaseExchangeListener):
 
     async def fetch_oi(self, symbol: str, interval: str = MIN_INTERVAL, limit: int = 7,
                        session: aiohttp.ClientSession = None) -> list[dict]:
-        """Fetch historical open interest from Bybit"""
+        """
+        Fetch historical Open Interest (OI) data for a given trading pair from Bybit.
+
+        Args:
+            symbol (str): Trading pair symbol (e.g., "BTCUSDT").
+            interval (str): Time interval in minutes (e.g., "15").
+            limit (int): Number of historical points to retrieve.
+            session (aiohttp.ClientSession, optional): Reusable HTTP session. Created if not provided.
+
+        Returns:
+            list[dict]: A list of OI records with timestamps and values.
+        """
         url = f"{self.BASE_URL}/v5/market/open-interest"
         symbol = symbol.upper()
         result = []
@@ -97,7 +130,19 @@ class BybitListener(BaseExchangeListener):
     async def fetch_ohlcv(self, symbol: str, start_date: int, end_date: int,
                           interval: str = MIN_INTERVAL,
                           session: aiohttp.ClientSession = None) -> list[dict]:
-        """Fetch OHLCV data from Bybit between two timestamps"""
+        """
+        Fetch historical OHLCV (Open, High, Low, Close, Volume) candle data from Bybit.
+
+        Args:
+            symbol (str): Trading pair symbol (e.g., "BTCUSDT").
+            start_date (int): Start time in milliseconds since epoch.
+            end_date (int): End time in milliseconds since epoch.
+            interval (str): Time interval in Bybit format (e.g., "15").
+            session (aiohttp.ClientSession, optional): Reusable HTTP session. Created if not provided.
+
+        Returns:
+            list[dict]: A list of candle data records with timestamp, close price, and volume.
+        """
         url = f"{self.BASE_URL}/v5/market/kline"
         symbol = symbol.upper()
         result = []

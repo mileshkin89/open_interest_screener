@@ -1,3 +1,15 @@
+"""
+bot_users.py
+
+Handles interaction with the SQLite database to store and retrieve user-specific screener settings.
+This includes user preferences such as scan period, threshold percentage, and selected exchanges.
+
+Functions:
+    init_db(): Initializes the database and creates the 'user_settings' table if it doesn't exist.
+    get_user_settings(user_id): Retrieves the screener settings for a given user.
+    update_user_settings(user_id, period, threshold, active_exchanges): Inserts or updates screener settings for a user.
+"""
+
 import aiosqlite
 from config import config
 import json
@@ -7,6 +19,10 @@ config.DB_PATH.parent.mkdir(parents=True, exist_ok=True)
 
 
 async def init_db():
+    """
+    Initializes the SQLite database by creating the 'user_settings' table if it doesn't exist.
+    Sets default values for active exchanges using the DEFAULT_EXCHANGES list.
+    """
     async with aiosqlite.connect(config.DB_PATH) as db:
         default_exchanges_str = json.dumps(DEFAULT_EXCHANGES)
         await db.execute(f'''
@@ -21,6 +37,16 @@ async def init_db():
 
 
 async def get_user_settings(user_id: int):
+    """
+    Retrieves the user's screener settings from the database.
+
+    Args:
+        user_id (int): Telegram user ID.
+
+    Returns:
+        dict or None: A dictionary with keys 'period', 'threshold', and 'active_exchanges'.
+                      Returns None if the user is not found in the database.
+    """
     async with aiosqlite.connect(config.DB_PATH) as db:
         cursor = await db.execute("SELECT period, threshold, active_exchanges FROM user_settings WHERE user_id = ?", (user_id,))
         row = await cursor.fetchone()
@@ -35,6 +61,15 @@ async def get_user_settings(user_id: int):
 
 
 async def update_user_settings(user_id: int, period=None, threshold=None, active_exchanges=None):
+    """
+    Inserts new or updates existing screener settings for a given user.
+
+    Args:
+        user_id (int): Telegram user ID.
+        period (int, optional): Time period in minutes to check for growth.
+        threshold (float, optional): Growth percentage threshold.
+        active_exchanges (list[str], optional): List of exchange names to monitor.
+    """
     async with aiosqlite.connect(config.DB_PATH) as db:
         existing = await get_user_settings(user_id)
         if existing is None:
