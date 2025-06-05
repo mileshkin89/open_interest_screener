@@ -88,7 +88,7 @@ async def get_historical_oi(symbol: str, exchange: str, before_date: int) -> lis
     Returns:
         list[dict]: List of historical open interest records as dictionaries, ordered by timestamp descending.
     """
-    since_date = before_date + 24 * 60 * 60 *1000
+    since_date = before_date - 24 * 60 * 60 *1000
     async with aiosqlite.connect(config.DB_PATH) as db:
         db.row_factory = aiosqlite.Row  # strings will be returned as dictionaries
         async with db.execute("""

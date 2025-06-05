@@ -280,7 +280,6 @@ class ConditionHandler:
         Returns:
             int: Count of matching historical signal events.
         """
-        history_io = {}
         _count_signal = 0
         _delta_oi = 0
 
@@ -294,13 +293,11 @@ class ConditionHandler:
                 if history_io[i]['timestamp'] - history_io[i + j]['timestamp'] != j * AVAILABLE_INTERVAL[self.interval] * 60 * 1000:
                     continue
 
-                _delta_io = self.delta_calculate(history_io[i]['open_interest'], history_io[i + j]['open_interest'])
-
+                _delta_oi = self.delta_calculate(history_io[i]['open_interest'], history_io[i + j]['open_interest'])
                 if _delta_oi is None or _delta_oi <= self.threshold:
                     continue
 
                 _count_signal += 1
-
                 break
 
         return _count_signal
