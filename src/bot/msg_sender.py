@@ -1,5 +1,5 @@
 import asyncio
-from bot.bot_init import bot
+from src.bot.bot_init import bot
 from aiogram.types import InlineKeyboardMarkup
 
 

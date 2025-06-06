@@ -23,11 +23,11 @@ import asyncio
 from datetime import datetime
 from typing import Callable
 
-from app_logic.condition_handler import ConditionHandler
-from exchange_listeners.listener_manager import ListenerManager
-from db.hist_signal_db import init_db, trim_old_records
-from app_logic.default_settings import DEFAULT_SETTINGS, MIN_INTERVAL, SLEEP_TIMER_SECOND
-from logging_config import get_logger
+from src.app_logic.condition_handler import ConditionHandler
+from src.exchange_listeners.listener_manager import ListenerManager
+from src.db.hist_signal_db import init_db, trim_old_records
+from src.app_logic.default_settings import DEFAULT_SETTINGS, MIN_INTERVAL, SLEEP_TIMER_SECOND
+from src.logging_config import get_logger
 
 logger = get_logger(__name__)
 

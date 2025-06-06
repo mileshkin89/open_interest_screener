@@ -11,9 +11,9 @@ Functions:
 """
 
 import aiosqlite
-from config import config
+from src.config import config
 import json
-from app_logic.default_settings import DEFAULT_SETTINGS, DEFAULT_EXCHANGES
+from src.app_logic.default_settings import DEFAULT_SETTINGS, DEFAULT_EXCHANGES
 
 config.DB_PATH.parent.mkdir(parents=True, exist_ok=True)
 

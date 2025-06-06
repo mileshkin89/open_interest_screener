@@ -11,7 +11,7 @@ Functions:
 """
 
 from aiogram.types import BotCommand, BotCommandScopeDefault
-from bot.bot_init import bot
+from src.bot.bot_init import bot
 
 async def set_commands():
     """

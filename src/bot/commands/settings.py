@@ -16,12 +16,12 @@ from aiogram import F, Router
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message, CallbackQuery
 
-from bot.keyboards import settings_menu
-from bot.states import ScreenerSettings
-from db.bot_users import get_user_settings, update_user_settings
-from app_logic.default_settings import DEFAULT_SETTINGS
-from app_logic.user_activity import mark_user_active
-from logging_config import get_logger
+from src.bot.keyboards import settings_menu
+from src.bot.states import ScreenerSettings
+from src.db.bot_users import get_user_settings, update_user_settings
+from src.app_logic.default_settings import DEFAULT_SETTINGS
+from src.app_logic.user_activity import mark_user_active
+from src.logging_config import get_logger
 
 logger = get_logger(__name__)
 

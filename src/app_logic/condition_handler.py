@@ -23,10 +23,10 @@ Requires:
 import asyncio
 import aiohttp
 from datetime import datetime
-from exchange_listeners.base_listener import BaseExchangeListener
-from app_logic.default_settings import DEFAULT_SETTINGS, MIN_INTERVAL
-from db.hist_signal_db import add_history_in_db, get_historical_oi
-from logging_config import get_logger
+from src.exchange_listeners.base_listener import BaseExchangeListener
+from src.app_logic.default_settings import DEFAULT_SETTINGS, MIN_INTERVAL
+from src.db.hist_signal_db import add_history_in_db, get_historical_oi
+from src.logging_config import get_logger
 
 logger = get_logger(__name__)
 
