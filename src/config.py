@@ -18,7 +18,7 @@ from dotenv import load_dotenv
 import os
 
 
-BASE_DIR = Path(__file__).parent
+BASE_DIR = Path(__file__).parent.parent
 
 load_dotenv()
 
@@ -47,3 +47,4 @@ class AppConfig(BaseSettings):
 
 # Singleton config instance used throughout the application
 config = AppConfig()
+

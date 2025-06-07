@@ -1,4 +1,4 @@
-FROM python:3.12.9
+FROM python:3.11.13-alpine3.22
 
 # Python configuration
 # Don't write .pyc files
@@ -24,7 +24,7 @@ RUN poetry config virtualenvs.create false && \
     poetry install --no-root --only main
 
 # Set working directory for the app itself
-WORKDIR /usr/src/bot
+WORKDIR /usr/src/app
 
 # Copy source code into the container
 COPY ./src .
