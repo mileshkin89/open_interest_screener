@@ -1,4 +1,4 @@
-FROM python:3.11.13-alpine3.22
+FROM python:3.12.11-alpine3.22
 
 # Python configuration
 # Don't write .pyc files

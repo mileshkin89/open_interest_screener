@@ -14,13 +14,13 @@ Designed for asynchronous execution using asyncio.
 """
 
 import asyncio
-from src.bot.bot_init import bot, dp
-from src.bot.menu import set_commands
-from src.db.bot_users import init_db
-from src.bot.commands import start, settings, exchanges
-from src.app_logic.user_activity import monitor_user_activity
-from src.app_logic import user_activity
-from src.logging_config import get_logger
+from bot.bot_init import bot_, dp
+from bot.menu import set_commands
+from db.bot_users import init_db
+from bot.commands import start, settings, exchanges
+from app_logic.user_activity import monitor_user_activity
+from app_logic import user_activity
+from logging_config import get_logger
 
 logger = get_logger(__name__)
 
@@ -48,8 +48,8 @@ async def main():
     dp.include_router(user_activity.router)
 
     # Start polling the Telegram API
-    await bot.delete_webhook(drop_pending_updates=True)
-    await dp.start_polling(bot)
+    await bot_.delete_webhook(drop_pending_updates=True)
+    await dp.start_polling(bot_)
 
 
 

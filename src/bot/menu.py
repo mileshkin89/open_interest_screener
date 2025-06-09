@@ -11,7 +11,7 @@ Functions:
 """
 
 from aiogram.types import BotCommand, BotCommandScopeDefault
-from src.bot.bot_init import bot
+from src.bot.bot_init import bot_
 
 async def set_commands():
     """
@@ -28,4 +28,4 @@ async def set_commands():
     commands = [BotCommand(command='start', description='Bot start menu'),
                 BotCommand(command='settings', description='Setting options'),
                 BotCommand(command='exchanges', description='Selection of exchanges')]
-    await bot.set_my_commands(commands, BotCommandScopeDefault())
+    await bot_.set_my_commands(commands, BotCommandScopeDefault())
