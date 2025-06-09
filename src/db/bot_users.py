@@ -91,4 +91,3 @@ async def update_user_settings(user_id: int, period=None, threshold=None, active
                 (new_period, new_threshold, new_exchanges, user_id)
             )
         await db.commit()
-

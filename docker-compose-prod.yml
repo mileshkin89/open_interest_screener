@@ -1,0 +1,29 @@
+services:
+  bot:
+    restart: always
+    build: .
+    container_name: oi-screener
+    command: [ "python", "main.py" ]
+    env_file:
+      - .env
+    environment:
+      - LOG_LEVEL=debug
+      - PYTHONPATH=/usr/src/app
+    volumes:
+      - src_data:/usr/src/app/src
+      - storage_data:/usr/src/app/storage
+      - logs_data:/usr/src/app/logs
+    networks:
+      - bot_networ
+
+volumes:
+  src_data:
+    driver: local
+  storage_data:
+    driver: local
+  logs_data:
+    driver: local
+
+networks:
+  bot_network:
+    driver: bridge

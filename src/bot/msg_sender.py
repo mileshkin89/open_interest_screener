@@ -1,5 +1,5 @@
 import asyncio
-from src.bot.bot_init import bot
+from src.bot.bot_init import bot_
 from aiogram.types import InlineKeyboardMarkup
 
 
@@ -17,6 +17,6 @@ async def notify(user_id: int, msg: str, reply_markup: InlineKeyboardMarkup = No
         to prevent hitting rate limits when sending many messages in sequence.
     """
     await asyncio.sleep(0.2)
-    await bot.send_message(chat_id=user_id, text=msg, reply_markup=reply_markup)
+    await bot_.send_message(chat_id=user_id, text=msg, reply_markup=reply_markup)
 
 
