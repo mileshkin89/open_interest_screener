@@ -148,14 +148,14 @@ Search for your bot in the Telegram app using the name you registered via @BotFa
 
 Click the **Start** button on the bot's welcome screen to enter the main menu.
     
-![start](.assets/screenshots/start_app.jpg)
+![start](assets/screenshots/start_app.jpg)
     
 
 
 ### 📋 Command Menu
 The bot provides quick navigation through the following commands:
 
-![commands_menu](.assets/screenshots/commands_menu.jpg)
+![commands_menu](assets/screenshots/commands_menu.jpg)
 
 
 🔘 `/start` Opens the main menu with:
@@ -166,7 +166,7 @@ The bot provides quick navigation through the following commands:
 
 * Allows instant launch with default parameters.
 
-  ![cmd_start](.assets/screenshots/cmd_start.jpg)
+  ![cmd_start](assets/screenshots/cmd_start.jpg)
 
 
 
@@ -178,7 +178,7 @@ The bot provides quick navigation through the following commands:
 
 * When done, press **Run screener** to start monitoring.
 
-  ![cmd_settings](.assets/screenshots/cmd_settings.jpg)
+  ![cmd_settings](assets/screenshots/cmd_settings.jpg)
 
 
 🌐 `/exchanges` 
@@ -189,7 +189,7 @@ The bot provides quick navigation through the following commands:
 
 * Click on the exchange button to toggle its status. A notification will confirm success.
 
-    ![cmd_exchanges](.assets/screenshots/cmd_exchanges.jpg)
+    ![cmd_exchanges](assets/screenshots/cmd_exchanges.jpg)
 
 
 ### ▶️ Launching the Screener
@@ -199,7 +199,7 @@ Once configuration is complete, press Run screener.
 
 * The bot will then begin scanning and sending alerts when matching signals appear.
 
-  ![signals](.assets/screenshots/signals.jpg)
+  ![signals](assets/screenshots/signals.jpg)
 
 
 ### 💤 Inactivity Management
