@@ -12,7 +12,6 @@ This module:
 
 Designed for asynchronous execution using asyncio.
 """
-
 import asyncio
 from bot.bot_init import bot_, dp
 from bot.menu import set_commands
