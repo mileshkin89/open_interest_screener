@@ -1,3 +1,6 @@
+# docker-compose -f docker-compose-prod.yml up --build
+# docker-compose -f docker-compose-prod.yml down
+# docker-compose -f docker-compose-prod.yml up
 services:
   bot:
     restart: always
@@ -8,17 +11,14 @@ services:
       - .env
     environment:
       - LOG_LEVEL=debug
-      - PYTHONPATH=/usr/src/app
+      - PYTHONPATH=/usr
     volumes:
-      - src_data:/usr/src/app/src
-      - storage_data:/usr/src/app/storage
-      - logs_data:/usr/src/app/logs
+      - storage_data:/usr/src/storage
+      - logs_data:/usr/src/logs
     networks:
-      - bot_networ
+      - bot_network
 
 volumes:
-  src_data:
-    driver: local
   storage_data:
     driver: local
   logs_data:

@@ -1,3 +1,6 @@
+# docker-compose -f docker-compose-dev.yml up --build
+# docker-compose -f docker-compose-dev.yml down
+# docker-compose -f docker-compose-dev.yml up
 services:
   bot:
     restart: always
@@ -8,11 +11,11 @@ services:
       - .env
     environment:
       - LOG_LEVEL=debug
-      - PYTHONPATH=/usr/src/app
+      - PYTHONPATH=/usr
     volumes:
-      - ./src:/usr/src/app/src
-      - ./storage:/usr/src/app/storage
-      - ./logs:/usr/src/app/logs
+      - ./src:/usr/src
+      - ./storage:/usr/src/storage
+      - ./logs:/usr/src/logs
     networks:
       - bot_network
 
