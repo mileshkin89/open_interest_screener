@@ -24,7 +24,7 @@ RUN poetry config virtualenvs.create false && \
     poetry install --no-root --only main
 
 # Set working directory for the app itself
-WORKDIR /usr/src/app
+WORKDIR /usr/src
 
 # Copy source code into the container
 COPY ./src .
