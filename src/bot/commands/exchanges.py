@@ -12,28 +12,42 @@ Includes:
 from aiogram import F, Router
 from aiogram.types import Message, CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton
 from src.app_logic.user_activity import mark_user_active
-from src.bot.keyboards import exchanges_menu
 from src.db.bot_users import get_user_settings, update_user_settings
+from src.bot.msg_sender import notify
 
 
 router = Router()
 
 
-async def show_exchanges_menu(target):
+async def show_exchanges_menu(target: Message | CallbackQuery):
     """
-    Sends a message with an inline keyboard allowing the user to select active exchanges.
+    Displays an inline keyboard allowing the user to enable or disable exchanges for scanning.
+
+    This function retrieves the user's current exchange preferences from the database,
+    marks the user as active, and sends a message with a keyboard for toggling exchange selections.
 
     Args:
-        target (Message | CallbackQuery): The object used to reply (either a message or callback).
+        target (Message | CallbackQuery): The incoming Telegram message or callback query from the user.
+
+    Behavior:
+        - Marks the user as active (for activity tracking).
+        - Retrieves current settings from storage.
+        - Generates a keyboard with exchange toggle buttons.
+        - Sends a message with instructions and the generated keyboard.
     """
-    await target.answer(
-        "🌐 Select the exchanges you want to monitor:\n\n"
-        "Click on an exchange to enable or disable it.\n"
-        "When you\'re ready, press 'Run scanner' to start with your current settings.",
-        reply_markup=exchanges_menu
-        )
     user_id = target.from_user.id
     mark_user_active(user_id)
+
+    settings = await get_user_settings(user_id)
+
+    active_exchanges = settings.get("active_exchanges", [])
+    keyboard = generate_exchange_keyboard(active_exchanges)
+    text = (
+        "🌐 Select the exchanges you want to monitor:\n\n"
+        "Click on an exchange to enable or disable it.\n"
+        "When you\'re ready, press 'Run scanner' to start with your current settings."
+    )
+    await notify(user_id, text, keyboard)
 
 
 @router.message(F.text == "/exchanges")

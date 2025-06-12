@@ -319,6 +319,7 @@ Manages multi-container setup and simplifies running services like the bot with 
 
 **V1.1.0** 
 * Implemented a button and a menu command to stop the screener
+* Fixed the initial static exchange menu. The exchange menu now dynamically displays the currently active exchanges.
 
 ---
 ## 📄 License

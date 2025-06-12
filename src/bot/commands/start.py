@@ -73,7 +73,7 @@ async def jump_exchanges_menu(callback: CallbackQuery):
     Redirects the user to the exchange selection menu.
     """
     await callback.answer()
-    await show_exchanges_menu(callback.message)
+    await show_exchanges_menu(callback)
 
 
 @router.callback_query(F.data == "start_scanner")
