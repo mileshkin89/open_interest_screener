@@ -46,7 +46,7 @@ async def cmd_exchanges(message: Message):
     await show_exchanges_menu(message)
 
 
-@router.callback_query(F.data.in_({"binance_on", "bybit_on"}))
+@router.callback_query(F.data.in_({"binance_on", "bybit_on", "okx_on"}))
 async def toggle_exchange(callback: CallbackQuery):
     """
     Toggles the activation status of a selected exchange.
@@ -91,7 +91,8 @@ def generate_exchange_keyboard(active_exchanges: list[str]) -> InlineKeyboardMar
         inline_keyboard=[
             [
                 InlineKeyboardButton(text=button_text("binance"), callback_data="binance_on"),
-                InlineKeyboardButton(text=button_text("bybit"), callback_data="bybit_on")
+                InlineKeyboardButton(text=button_text("bybit"), callback_data="bybit_on"),
+                InlineKeyboardButton(text=button_text("okx"), callback_data="okx_on")
             ],
             [InlineKeyboardButton(text="▶️ Run scanner", callback_data="start_scanner")]
         ]

@@ -99,6 +99,7 @@ class Scanner:
                 # Downloading the current list of cryptocurrencies
                 for exchange in self.manager.get_all_active_listeners():
                     for name, listener in exchange.items():
+                        print(name, listener) #####################
                         try:
                             if name != None and listener != None:
                                 symbols = await listener.fetch_usdt_symbols()

@@ -43,7 +43,7 @@ class BinanceListener(BaseExchangeListener):
                 async with session.get(url, timeout=10) as resp:
                     if resp.status != 200:
                         text = await resp.text()
-                        logger.warning(f"Failed to fetch symbols: {resp.status}, {text}")
+                        logger.warning(f"Failed to fetch Binance symbols: {resp.status}, {text}")
                         return []
 
                     data = await resp.json()
@@ -91,17 +91,17 @@ class BinanceListener(BaseExchangeListener):
             async with session.get(url, params=params, timeout=10) as resp:
                 if resp.status != 200:
                     text = await resp.text()
-                    logger.warning(f"OI request failed for {symbol}: {resp.status}, {text}")
+                    logger.warning(f"Binance. OI request failed for {symbol}: {resp.status}, {text}")
                     return []
 
                 data = await resp.json()
 
                 if not isinstance(data, list):
-                    logger.warning(f"OI data not list for {symbol}: {data}")
+                    logger.warning(f"Binance. OI data not list for {symbol}: {data}")
                     return []
 
                 for entry in data:
-                    oi = entry.get("sumOpenInterest")
+                    oi = float(entry.get("sumOpenInterest"))
                     timestamp = entry.get("timestamp")
                     if oi is None or timestamp is None:
                         continue
@@ -111,13 +111,13 @@ class BinanceListener(BaseExchangeListener):
                         "symbol": symbol,
                         "datetime": dt,
                         "timestamp": timestamp,
-                        "open_interest": float(oi),
+                        "open_interest": oi,
                     })
 
         except (aiohttp.ClientError, asyncio.TimeoutError) as e:
-            logger.error(f"Network error fetching OI for {symbol}: {e}")
+            logger.error(f"Binance. Network error fetching OI for {symbol}: {e}")
         except Exception as e:
-            logger.error(f"Unexpected error fetching OI for {symbol}: {e}")
+            logger.error(f"Binance. Unexpected error fetching OI for {symbol}: {e}")
         finally:
             if close_session:
                 await session.close()
@@ -160,12 +160,13 @@ class BinanceListener(BaseExchangeListener):
             async with session.get(url, params=params, timeout=10) as resp:
                 if resp.status != 200:
                     text = await resp.text()
-                    logger.warning(f"OHLCV request failed for {symbol}: {resp.status}, {text}")
+                    logger.warning(f"Binance. OHLCV request failed for {symbol}: {resp.status}, {text}")
                     return []
 
                 data = await resp.json()
+
                 if not isinstance(data, list):
-                    logger.warning(f"OHLCV data not list for {symbol}: {data}")
+                    logger.warning(f"Binance. OHLCV data not list for {symbol}: {data}")
                     return []
 
                 for candle in data:
@@ -178,9 +179,9 @@ class BinanceListener(BaseExchangeListener):
                     })
 
         except (aiohttp.ClientError, asyncio.TimeoutError) as e:
-            logger.error(f"Network error fetching OHLCV for {symbol}: {e}")
+            logger.error(f"Binance. Network error fetching OHLCV for {symbol}: {e}")
         except Exception as e:
-            logger.error(f"Unexpected error fetching OHLCV for {symbol}: {e}")
+            logger.error(f"Binance. Unexpected error fetching OHLCV for {symbol}: {e}")
         finally:
             if close_session:
                 await session.close()

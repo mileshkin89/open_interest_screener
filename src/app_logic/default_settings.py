@@ -10,7 +10,7 @@ Default parameters for signal evaluation:
 - period (int): Number of minutes over which Open Interest change is measured.
 - threshold (float): Minimum relative Open Interest change (e.g., 0.05 = 5%) to trigger a signal.
 """
-DEFAULT_EXCHANGES = ["binance", "bybit"]
+DEFAULT_EXCHANGES = ["binance", "bybit", "okx"]
 """
 List of enabled exchanges by default. Used when the user has not manually selected exchanges.
 """

@@ -33,7 +33,8 @@ settings_menu = InlineKeyboardMarkup(
 exchanges_menu = InlineKeyboardMarkup(
     inline_keyboard=[
         [InlineKeyboardButton(text="🟢 Binance", callback_data="binance_on"),
-        InlineKeyboardButton(text="🟢 Bybit", callback_data="bybit_on")],
+        InlineKeyboardButton(text="🟢 Bybit", callback_data="bybit_on"),
+        InlineKeyboardButton(text="🟢 OKX", callback_data="okx_on")],
         [InlineKeyboardButton(text="Run scanner", callback_data="start_scanner")]
     ]
 )

@@ -8,6 +8,7 @@ active listeners, all listeners, or specific ones based on the enabled exchanges
 
 from src.exchange_listeners.binance_listener import BinanceListener
 from src.exchange_listeners.bybit_listener import BybitListener
+from src.exchange_listeners.okx_listener import OKXListener
 from typing import Any
 from src.logging_config import get_logger
 
@@ -33,6 +34,7 @@ class ListenerManager:
         self.exchange_map = {
             "binance": BinanceListener(),
             "bybit": BybitListener(),
+            "okx": OKXListener()
         }
 
     def get_listener(self, exchange_name: str) -> Any | None:

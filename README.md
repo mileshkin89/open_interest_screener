@@ -23,7 +23,7 @@ Early detection of OI spikes helps traders:
 
 ### 💬 Each Alert Includes
 * 📈 **OI growth** detected
-* 💰 **Price and volume change** during the signal intervalма
+* 💰 **Price and volume change** during the signal interval
 * 🔁 **Signal frequency** for that asset in the last 24 hours
 
 📲 All delivered in a clear and user-friendly format right in your **Telegram chat** 
