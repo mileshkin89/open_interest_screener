@@ -18,7 +18,8 @@ start_menu = InlineKeyboardMarkup(
     inline_keyboard=[
         [InlineKeyboardButton(text="Settings", callback_data="jump_settings"),
         InlineKeyboardButton(text="Exchanges", callback_data="jump_exchanges")],
-        [InlineKeyboardButton(text="Run scanner by default", callback_data="start_scanner")]
+        [InlineKeyboardButton(text="Run scanner by default", callback_data="start_scanner")],
+        [InlineKeyboardButton(text="Stop scanner running", callback_data="stop_scanner")]
     ]
 )
 
