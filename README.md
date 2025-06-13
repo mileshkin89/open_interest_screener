@@ -1,8 +1,17 @@
-# 📈 Open Interest Screener v1.0.0
+# 📈 Open Interest Screener v1.1.0
 A powerful tool for **monitoring Open Interest (OI) changes** on cryptocurrency futures using a Telegram bot.
 
-
 **You can use a real-time bot called** `@OI_futures_Screener_bot`
+
+---
+1. [**Overview**](#-overview)
+2. [**Features**](#-features)
+3. [**Installation**](#-installation)
+4. [**Usage Guide**](#-usage-guide)
+5. [**Project Structure**](#-project-structure)
+6. [**Tech Stack**](#-tech-stack)
+7. [**List of Versions**](#list-of-versions)
+8. [**License**](#-license)
 
 ---
 ## 📝 Overview
@@ -316,9 +325,15 @@ Provides consistent environment for running the bot in isolation, including depe
 
 * **docker-compose** -
 Manages multi-container setup and simplifies running services like the bot with a single command.
+---
+## List of versions
+
+**V1.1.0** 
+* Implemented a button and a menu command to stop the screener
+* Fixed the initial static exchange menu. The exchange menu now dynamically displays the currently active exchanges.
 
 ---
-### 📄 License
+## 📄 License
 
 This project is licensed under the MIT License. See the LICENSE file for details.
 

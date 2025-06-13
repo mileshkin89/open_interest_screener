@@ -18,7 +18,7 @@ from aiogram import F, Router
 from aiogram.types import Message, CallbackQuery
 from src.bot.keyboards import start_menu
 from src.db.bot_users import get_user_settings, update_user_settings
-from src.app_logic import start_or_restart_scanner
+from src.app_logic import start_or_restart_scanner, stop_scanner
 from src.app_logic.user_activity import mark_user_active
 from src.app_logic.default_settings import DEFAULT_SETTINGS, DEFAULT_EXCHANGES
 from src.bot.commands.settings import show_settings_menu
@@ -46,11 +46,13 @@ async def cmd_start(message: Message):
         "🔧 <b>Settings</b> – set up screener time period and growth threshold\n"
         "🌐 <b>Exchanges</b> – choose which exchanges to monitor\n"
         "▶️ <b>Run scanner by default</b> – start scanning using default settings (15 min, 5%)"
-        " or your current settings if set",
+        " or your current settings if set\n"
+        "⛔ <b>Stop scanner running</b> – stops active scanners",
         reply_markup=start_menu
     )
     user_id = message.from_user.id
     mark_user_active(user_id)
+
 
 @router.callback_query(F.data == "jump_settings")
 async def jump_settings_menu(callback: CallbackQuery):
@@ -71,7 +73,7 @@ async def jump_exchanges_menu(callback: CallbackQuery):
     Redirects the user to the exchange selection menu.
     """
     await callback.answer()
-    await show_exchanges_menu(callback.message)
+    await show_exchanges_menu(callback)
 
 
 @router.callback_query(F.data == "start_scanner")
@@ -122,3 +124,52 @@ async def start_scan(callback: CallbackQuery):
             f"Threshold: {settings['threshold'] * 100:.2f}%\n"
             f"Active exchanges: {exchanges_str}"
         )
+
+
+@router.message(F.text == "/stop")
+async def cmd_stop(message: Message):
+    """
+    Handles the /stop command from the user.
+
+    Stops the currently running scanner for the user, if any.
+
+    Args:
+        message (Message): Telegram message object containing the command.
+    """
+    await stop_scan(message)
+
+
+@router.callback_query(F.data == "stop_scanner")
+async def jump_stop_scanner(callback: CallbackQuery):
+    """
+    Handles the "Stop scanner" inline button press.
+
+    Stops the currently running scanner for the user, if any,
+    and removes the loading indicator from the button.
+
+    Args:
+        callback (CallbackQuery): Telegram callback query object.
+    """
+    await callback.answer()
+    await stop_scan(callback)
+
+
+async def stop_scan(target: Message | CallbackQuery):
+    """
+    Unified scanner stop handler for both /stop command and inline button.
+
+    Detects the user, marks them as active, and attempts to stop the scanner.
+    Sends a notification with the result.
+
+    Args:
+        target (Message | CallbackQuery): Telegram event source (message or callback query).
+    """
+    user_id = target.from_user.id
+    mark_user_active(user_id)
+
+    status = await stop_scanner(user_id)
+
+    if status == "stopped":
+        await notify(user_id, f"⛔ Scanner stopped.")
+    elif status == "not_running":
+        await notify(user_id, f"📴 No scanners running")

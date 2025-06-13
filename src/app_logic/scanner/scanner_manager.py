@@ -10,6 +10,7 @@ This module:
 
 Functions:
     start_or_restart_scanner: Starts or restarts a scanner for a specific user.
+    stop_scanner: Stops a scanner for a specific user.
 
 Globals:
     running_scanners (dict): Tracks active scanners per user.
@@ -79,3 +80,34 @@ async def start_or_restart_scanner(user_id: int, settings: dict, exchanges: list
     logger.info(f"User {user_id} started screener successfully. Settings: {settings}")
     running_scanners[user_id] = {"task": task, "settings": settings}
     return "started"
+
+
+async def stop_scanner(user_id: int):
+    """
+    Gracefully stops the running scanner for the given user, if it exists.
+
+    Cancels the asyncio task associated with the user and removes the scanner
+    from the active registry. Logs the action.
+
+    Args:
+        user_id (int): The Telegram user ID whose scanner should be stopped.
+
+    Returns:
+        str: One of:
+            - "stopped": Scanner was found and successfully stopped.
+            - "not_running": No active scanner was found for the user.
+    """
+    current = running_scanners.get(user_id)
+
+    if current:
+        current["task"].cancel()
+        try:
+            await current["task"]
+        except asyncio.CancelledError:
+            pass
+        del running_scanners[user_id]
+        logger.info(f"User {user_id} stopped screener successfully.")
+        return "stopped"
+
+    logger.info(f"Not running scanner for user {user_id}.")
+    return "not_running"
