@@ -20,12 +20,14 @@ Requires:
 """
 
 import asyncio
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Callable
+from zoneinfo import ZoneInfo
 
 from src.app_logic.condition_handler import ConditionHandler
 from src.exchange_listeners.listener_manager import ListenerManager
 from src.db.hist_signal_db import init_db, trim_old_records
+from src.db.bot_users import get_user_settings
 from src.app_logic.default_settings import DEFAULT_SETTINGS, MIN_INTERVAL, SLEEP_TIMER_SECOND
 from src.logging_config import get_logger
 
@@ -115,10 +117,14 @@ class Scanner:
                 self.handler.set_client(listener)
 
                 signal_coins = []
+                time_zone: str = "UTC"
 
                 # Getting a list of cryptocurrencies for which a condition is met on a specific exchange
                 try:
                     signal_coins = await self.handler.is_signal(symbols, threshold_period, MIN_INTERVAL, threshold)
+
+                    user_settings = await get_user_settings(user_id)
+                    time_zone = user_settings.get("time_zone", "UTC")
                 except AttributeError as e:
                     logger.error(f"Error AttributeError: {e}", exc_info=True)
                 except Exception as e:
@@ -126,9 +132,12 @@ class Scanner:
 
                 if signal_coins:
                     for coin in signal_coins:
+                        dt = coin['datetime']
+                        user_local_time = dt.astimezone(ZoneInfo(time_zone)).strftime('%H:%M:%S')
+
                         # Sending a signal message
                         msg = (
-                            f"🚨 [{coin['exchange']}]  {coin['datetime'].time()}" 
+                            f"🚨 [{coin['exchange']}]  {user_local_time}" 
                             f"\n<b>{coin['symbol']}</b> in {coin['delta_time_minutes']} min: "
                             f"\nOI {coin['delta_oi_%']},  price {coin['delta_price_%']},  volume {coin['delta_volume_%']}"
                             f"\nNumber of signals per day: {coin['count_signal_24h']}"

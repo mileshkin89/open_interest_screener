@@ -20,7 +20,7 @@ from src.bot.keyboards import start_menu
 from src.db.bot_users import get_user_settings, update_user_settings
 from src.app_logic import start_or_restart_scanner, stop_scanner
 from src.app_logic.user_activity import mark_user_active
-from src.app_logic.default_settings import DEFAULT_SETTINGS, DEFAULT_EXCHANGES
+from src.app_logic.default_settings import DEFAULT_SETTINGS, DEFAULT_EXCHANGES, DEFAULT_TIME_ZONE
 from src.bot.commands.settings import show_settings_menu
 from src.bot.commands.exchanges import show_exchanges_menu
 from src.bot.msg_sender import notify
@@ -43,7 +43,7 @@ async def cmd_start(message: Message):
     """
     await message.answer(
         "Welcome! Please choose what you want to do:\n\n"
-        "🔧 <b>Settings</b> – set up screener time period and growth threshold\n"
+        "🔧 <b>Settings</b> – set up time_zone, screener time period and growth threshold\n"
         "🌐 <b>Exchanges</b> – choose which exchanges to monitor\n"
         "▶️ <b>Run scanner by default</b> – start scanning using default settings (15 min, 5%)"
         " or your current settings if set\n"
@@ -95,6 +95,7 @@ async def start_scan(callback: CallbackQuery):
     if settings is None:
         settings = DEFAULT_SETTINGS.copy()
         settings["active_exchanges"] = DEFAULT_EXCHANGES.copy()
+        settings["time_zone"] = DEFAULT_TIME_ZONE
         await update_user_settings(user_id, **settings)
     else:
         if "period" not in settings:
@@ -103,8 +104,11 @@ async def start_scan(callback: CallbackQuery):
             settings["threshold"] = DEFAULT_SETTINGS["threshold"]
         if "active_exchanges" not in settings:
             settings["active_exchanges"] = DEFAULT_EXCHANGES.copy()
+        if "time_zone" not in settings:
+            settings["time_zone"] = DEFAULT_TIME_ZONE
 
     exchanges = settings["active_exchanges"]
+    time_zone = settings["time_zone"]
 
     status = await start_or_restart_scanner(user_id, settings, exchanges, notify)
 
@@ -115,14 +119,16 @@ async def start_scan(callback: CallbackQuery):
             f"ℹ️ The scanner is already running with these settings:\n\n"
             f"Period: {settings['period']} minutes\n"
             f"Threshold: {settings['threshold'] * 100:.2f}%\n"
-            f"Active exchanges: {exchanges_str}"
+            f"Active exchanges: {exchanges_str}\n"
+            f"Time zone: '{time_zone}'"
         )
     elif status == "started":
         await callback.message.answer(
             f"✅ The scanner has been launched with new settings:\n\n"
             f"Period: {settings['period']} minutes\n"
             f"Threshold: {settings['threshold'] * 100:.2f}%\n"
-            f"Active exchanges: {exchanges_str}"
+            f"Active exchanges: {exchanges_str}\n"
+            f"Time zone: '{time_zone}'"
         )
 
 

@@ -14,6 +14,8 @@ DEFAULT_EXCHANGES = ["binance", "bybit"]
 """
 List of enabled exchanges by default. Used when the user has not manually selected exchanges.
 """
+DEFAULT_TIME_ZONE = "UTC"
+
 
 INACTIVITY_DAYS = 3
 """
@@ -34,3 +36,33 @@ MIN_INTERVAL = "5"
 Minimum timeframe (in minutes) used for Open Interest data requests to exchanges.
 Used as a default granularity for analysis.
 """
+
+POPULAR_TIMEZONES_BY_OFFSET = {
+    -12: ["Etc/GMT+12"],
+    -11: ["Pacific/Midway", "Pacific/Niue"],
+    -10: ["Pacific/Honolulu", "Pacific/Tahiti"],
+    -9:  ["America/Anchorage", "Pacific/Gambier"],
+    -8:  ["America/Los_Angeles", "America/Tijuana"],
+    -7:  ["America/Denver", "America/Phoenix"],
+    -6:  ["America/Chicago", "America/Mexico_City"],
+    -5:  ["America/New_York", "America/Toronto", "America/Lima"],
+    -4:  ["America/Santiago", "America/Caracas", "America/Halifax"],
+    -3:  ["America/Sao_Paulo", "America/Argentina/Buenos_Aires"],
+    -2:  ["America/Noronha"],
+    -1:  ["Atlantic/Azores", "Atlantic/Cape_Verde"],
+     0:  ["UTC", "Europe/London", "Africa/Abidjan"],
+     1:  ["Europe/Berlin", "Europe/Paris", "Africa/Lagos"],
+     2:  ["Europe/Kyiv", "Europe/Bucharest", "Africa/Johannesburg"],
+     3:  ["Europe/Moscow", "Africa/Nairobi", "Asia/Riyadh"],
+     4:  ["Asia/Dubai", "Asia/Baku", "Europe/Samara"],
+     5:  ["Asia/Karachi", "Asia/Tashkent"],
+     6:  ["Asia/Dhaka", "Asia/Almaty"],
+     7:  ["Asia/Bangkok", "Asia/Jakarta"],
+     8:  ["Asia/Shanghai", "Asia/Singapore", "Asia/Manila"],
+     9:  ["Asia/Tokyo", "Asia/Seoul"],
+    10:  ["Australia/Sydney", "Pacific/Port_Moresby"],
+    11:  ["Pacific/Noumea", "Asia/Magadan"],
+    12:  ["Pacific/Auckland", "Pacific/Fiji"],
+    13:  ["Pacific/Tongatapu"],
+    14:  ["Pacific/Kiritimati"]
+}

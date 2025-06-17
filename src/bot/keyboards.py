@@ -26,6 +26,7 @@ settings_menu = InlineKeyboardMarkup(
     inline_keyboard=[
         [InlineKeyboardButton(text="Period", callback_data="set_period"),
         InlineKeyboardButton(text="Threshold", callback_data="set_threshold")],
+        [InlineKeyboardButton(text="Time zone", callback_data="set_offset")],
         [InlineKeyboardButton(text="Run scanner", callback_data="start_scanner")]
     ]
 )

@@ -20,3 +20,6 @@ class ScreenerSettings(StatesGroup):
     """
     waiting_for_period = State()
     waiting_for_threshold = State()
+    waiting_for_offset = State()
+    waiting_for_time_zone = State()
+
