@@ -1,4 +1,4 @@
-# 📈 Open Interest Screener v1.1.0
+# 📈 Open Interest Screener v1.2.0
 A powerful tool for **monitoring Open Interest (OI) changes** on cryptocurrency futures using a Telegram bot.
 
 ---
@@ -42,7 +42,6 @@ Early detection of OI spikes helps traders:
 
 * 🔹 Most exchange APIs provide OI data only for 5-minute intervals, so signals are generated at the close of each 5-minute candle
 * 🔹 Each Telegram user can run only one active scanner with a specific configuration. To use multiple configurations simultaneously, use separate Telegram account
-* 🕒 In this version, timestamps in alerts may be displayed in UTC (Coordinated Universal Time), rather than your local time zone.
 
 ---
 ## 🚀 Features
@@ -320,6 +319,9 @@ Manages multi-container setup and simplifies running services like the bot with 
 **V1.1.0** 
 * Implemented a button and a menu command to stop the screener
 * Fixed the initial static exchange menu. The exchange menu now dynamically displays the currently active exchanges.
+
+**V1.2.0**
+* Implemented user local time detection in the /settings command. Signal notifications now correctly display the local time based on the user's time zone.
 
 ---
 ## 📄 License
