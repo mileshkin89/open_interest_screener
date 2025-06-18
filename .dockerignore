@@ -87,3 +87,6 @@ venv/
 
 # VS Code
 .vscode/
+
+# Tests
+my_tests/
