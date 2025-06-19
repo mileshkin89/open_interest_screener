@@ -1,4 +1,4 @@
-# 📈 Open Interest Screener v1.2.0
+# 📈 Open Interest Screener v1.3.0
 A powerful tool for **monitoring Open Interest (OI) changes** on cryptocurrency futures using a Telegram bot.
 
 **You can use a real-time bot called** `@OI_futures_Screener_bot`
@@ -37,6 +37,8 @@ Early detection of OI spikes helps traders:
 * 📈 **OI growth** detected
 * 💰 **Price and volume change** during the signal intervalма
 * 🔁 **Signal frequency** for that asset in the last 24 hours
+* 🌐 **Exchange name** is clickable — it links directly to the trading page of the asset on the corresponding exchange
+* 🧾 **Symbol** is also clickable — for quick copy & paste into other tools or platforms
 
 📲 All delivered in a clear and user-friendly format right in your **Telegram chat** 
 
@@ -181,21 +183,28 @@ The bot provides quick navigation through the following commands:
 🔘 `/start` Opens the main menu with:
 
 * ⚙️ <b>Settings</b>
-
 * 📊 <b>Exchanges</b>
-
 * Allows instant launch with default parameters.
 
   <img alt="cmd_start" height="580" src="assets/screenshots/cmd_start.jpg" width="300"/>
 
 
+▶️ `/run` Instantly launches the screener with your current settings:
+
+* Period, threshold, time zone, and selected exchanges are loaded from your preferences.
+* Same as pressing the Run screener button in the menu.
+
+
+🛑 `/stop` Stops the screener when it's not needed:
+* Helps reduce notification spam and avoid unnecessary distractions.
+* Helps reduce notification spam and avoid unnecessary distractions.
+* Same as pressing the Stop scanner button in the menu.
+
 
 ⚙️ `/settings` 
 
 * Adjust the analysis **timeframe** (e.g., 5m, 15m) and **open interest threshold** (%).
-
-* Click a button to choose a parameter, then enter an integer and send the message.
-
+* Select your **time zone** to ensure signal timestamps are displayed correctly.
 * When done, press **Run screener** to start monitoring.
 
   <img alt="cmd_settings" height="580" src="assets/screenshots/cmd_settings.jpg" width="300"/>
@@ -204,9 +213,7 @@ The bot provides quick navigation through the following commands:
 🌐 `/exchanges` 
 
 * Manage the list of **active exchanges** to monitor.
-
 * 🟢 Green = enabled, 🔴 Red = disabled.
-
 * Click on the exchange button to toggle its status. A notification will confirm success.
 
   <img alt="cmd_exchanges" height="580" src="assets/screenshots/cmd_exchanges.jpg" width="300"/>
@@ -284,6 +291,7 @@ open_interest_screener/
         ├── base_listener.py          # Abstract base class for exchange listeners.
         ├── binance_listener.py       # Listener for Binance Futures
         ├── bybit_listener.py         # Listener for Bybit Futures
+        ├── exchange_urls.py          # URL templates and link generation logic for exchanges
         └── listener_manager.py       # Starts and stops listeners based on active user settings.
 ```
 
@@ -333,6 +341,11 @@ Manages multi-container setup and simplifies running services like the bot with 
 
 **V1.2.0**
 * Implemented user local time detection in the /settings command. Signal notifications now correctly display the local time based on the user's time zone.
+
+**V1.3.0**
+* In signal messages, exchange names are now clickable — they open the trading page for the instrument on the corresponding exchange
+* Symbols are now clickable — enabling quick copy-paste for use in external tools
+* Added the /run command as a shortcut to start the screener — improves user navigation and overall UI flow
 
 ---
 ## 📄 License

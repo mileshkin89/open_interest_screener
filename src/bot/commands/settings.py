@@ -98,7 +98,7 @@ async def set_time_zone(message: Message, state: FSMContext):
 
         offset = int(text)
         if not -12 <= offset <= 14:
-            raise ValueError(f"❌ The offset should be between -12 and 14")
+            raise ValueError(f"❌ The offset should be between -12 and 14: {offset}")
 
         await state.update_data(offset=offset)
         await state.set_state(ScreenerSettings.waiting_for_time_zone)
@@ -112,7 +112,7 @@ async def set_time_zone(message: Message, state: FSMContext):
 
     except ValueError as e:
         await message.answer(f"❌ The offset should be between -12 and 14")
-        logger.warning(f"Problem set offset {user_id}: {e}: {text}")
+        logger.warning(f"Problem set offset: {e}")
 
 
 @router.callback_query(ScreenerSettings.waiting_for_time_zone)  #StateFilter(
@@ -132,9 +132,10 @@ async def  process_time_zone(callback: CallbackQuery, state: FSMContext):
 
     dt = datetime.now(ZoneInfo(time_zone))
 
-    await callback.message.answer(f"You chose: \"{time_zone}\"\nYour current time - {dt.strftime('%H:%M:%S')}")
     await update_user_settings(user_id, time_zone=time_zone)
     await state.clear()
+    await callback.message.answer(
+        f"You chose: \"{time_zone}\"\nYour current time - {dt.strftime('%H:%M:%S')}\nPress /run to start")
     await callback.answer()
 
 
@@ -170,11 +171,12 @@ async def process_period(message: Message, state: FSMContext):
 
         if not text.isdigit():
             await message.answer("❌ Please enter a integer number from 5 to 30.")
+            logger.warning(f"Problem set period: ❌ Please enter a integer number from 5 to 30: {text}")
             return
 
         period = int(text)
         if not 5 <= period <= 30:
-            raise ValueError(f"❌ The period should be integer number from 5 to 30")
+            raise ValueError(f"❌ The period should be integer number from 5 to 30: {period}")
 
         user_id = message.from_user.id
 
@@ -183,12 +185,12 @@ async def process_period(message: Message, state: FSMContext):
 
         await update_user_settings(user_id, period=period, threshold=threshold)
 
-        await message.answer(f"✅ The period is set: {period} minutes.")
+        await message.answer(f"✅ The period is set: {period} minutes.\nPress /run to start")
         await state.clear()
 
     except ValueError as e:
         await message.answer(str(e))
-        logger.warning(f"Problem set period {user_id}: {e}: {text}")
+        logger.warning(f"Problem set period: {e}")
 
 
 #=============  SET THRESHOLD   ============================
@@ -224,11 +226,12 @@ async def process_threshold(message: Message, state: FSMContext):
 
         if not text.isdigit():
             await message.answer("❌ Please enter a integer number from 0 to 100.")
+            logger.warning(f"Problem set threshold: ❌ Please enter a integer number from 0 to 100: {text}")
             return
 
         threshold = float(text)
         if not 0 <= threshold <= 100:
-            raise ValueError("❌ The percentage must be integer number between 0 and 100.")
+            raise ValueError(f"❌ The percentage must be integer number between 0 and 100: {threshold}")
         threshold = threshold / 100
 
         user_id = message.from_user.id
@@ -238,9 +241,9 @@ async def process_threshold(message: Message, state: FSMContext):
 
         await update_user_settings(user_id, period=period, threshold=threshold)
 
-        await message.answer(f"✅ Growth threshold set: {threshold * 100:.2f}%")
+        await message.answer(f"✅ Growth threshold set: {threshold * 100:.2f}%\nPress /run to start")
         await state.clear()
 
     except ValueError as e:
         await message.answer(str(e))
-        logger.warning(f"Problem set threshold {user_id}: {e}: {text}")
+        logger.warning(f"Problem set threshold: {e}")

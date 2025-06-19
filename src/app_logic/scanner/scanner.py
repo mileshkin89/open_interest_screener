@@ -29,6 +29,7 @@ from src.exchange_listeners.listener_manager import ListenerManager
 from src.db.hist_signal_db import init_db, trim_old_records
 from src.db.bot_users import get_user_settings
 from src.app_logic.default_settings import DEFAULT_SETTINGS, MIN_INTERVAL, SLEEP_TIMER_SECOND
+from src.exchange_listeners.exchange_urls import create_link
 from src.logging_config import get_logger
 
 logger = get_logger(__name__)
@@ -132,13 +133,17 @@ class Scanner:
 
                 if signal_coins:
                     for coin in signal_coins:
+                        # Set local time
                         dt = coin['datetime']
                         user_local_time = dt.astimezone(ZoneInfo(time_zone)).strftime('%H:%M:%S')
 
+                        # Collecting a link to 'symbol'
+                        exchange_url = create_link(coin['exchange'], coin['symbol'])
+
                         # Sending a signal message
                         msg = (
-                            f"🚨 [{coin['exchange']}]  {user_local_time}" 
-                            f"\n<b>{coin['symbol']}</b> in {coin['delta_time_minutes']} min: "
+                            f"🚨 <code>{coin['symbol']}</code>" 
+                            f"\n<a href=\"{exchange_url}\">[{coin['exchange']}]</a>  {user_local_time} in {coin['delta_time_minutes']} min:"
                             f"\nOI {coin['delta_oi_%']},  price {coin['delta_price_%']},  volume {coin['delta_volume_%']}"
                             f"\nNumber of signals per day: {coin['count_signal_24h']}"
                         )
