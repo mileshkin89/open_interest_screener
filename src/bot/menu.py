@@ -27,6 +27,7 @@ async def set_commands():
     The commands are set globally for all users using the default command scope.
     """
     commands = [BotCommand(command='start', description='Bot start menu'),
+                BotCommand(command='run', description='Run scanner'),
                 BotCommand(command='stop', description='Stopped active scanner'),
                 BotCommand(command='settings', description='Setting options'),
                 BotCommand(command='exchanges', description='Selection of exchanges')]

@@ -76,18 +76,43 @@ async def jump_exchanges_menu(callback: CallbackQuery):
     await show_exchanges_menu(callback)
 
 
+# =======================  button: Run scanner  ===========================
+# =============================   /run  ===========================
 @router.callback_query(F.data == "start_scanner")
-async def start_scan(callback: CallbackQuery):
+async def jump_start_scanner(callback: CallbackQuery):
     """
-    Handles the "Run scanner" button press from the start menu.
+    Handles the "Run scanner by default" and "Run scanner" inline buttons.
 
-    Retrieves user settings (or uses defaults), then starts or restarts the screener scanner.
-    Sends a confirmation message showing the scanner's configuration.
+    Acknowledges the callback and launches the screener based on user preferences
+    or defaults if not configured.
+    """
+    await callback.answer()
+    await start_scan(callback)
+
+
+@router.message(F.text == "/run")
+async def cmd_run(message: Message):
+    """
+    Handles the `/run` command from the user.
+
+    Starts or restarts the scanner using the user's saved settings.
+    """
+    await start_scan(message)
+
+
+async def start_scan(target):
+    """
+    Starts or restarts the Open Interest scanner for the given user.
+
+    - Loads user-specific scanner settings from the database.
+    - If settings are missing or incomplete, initializes them with default values.
+    - Starts the scanner with the given parameters (period, threshold, exchanges, time zone).
+    - Notifies the user whether the scanner was started or is already running.
 
     Args:
-        callback (CallbackQuery): The callback data triggered from inline button.
+        target (Message | CallbackQuery): Source of the request (message or callback).
     """
-    user_id = callback.from_user.id
+    user_id = target.from_user.id
     mark_user_active(user_id)
 
     settings = await get_user_settings(user_id)
@@ -115,7 +140,8 @@ async def start_scan(callback: CallbackQuery):
     exchanges_str = ", ".join(f"'{name.capitalize()}'" for name in exchanges)
 
     if status == "already_running":
-        await callback.message.answer(
+        await notify(user_id=user_id,
+                     msg=
             f"ℹ️ The scanner is already running with these settings:\n\n"
             f"Period: {settings['period']} minutes\n"
             f"Threshold: {settings['threshold'] * 100:.2f}%\n"
@@ -123,7 +149,8 @@ async def start_scan(callback: CallbackQuery):
             f"Time zone: '{time_zone}'"
         )
     elif status == "started":
-        await callback.message.answer(
+        await notify(user_id=user_id,
+                     msg=
             f"✅ The scanner has been launched with new settings:\n\n"
             f"Period: {settings['period']} minutes\n"
             f"Threshold: {settings['threshold'] * 100:.2f}%\n"
@@ -131,7 +158,7 @@ async def start_scan(callback: CallbackQuery):
             f"Time zone: '{time_zone}'"
         )
 
-
+# =======================   /stop   ===========================
 @router.message(F.text == "/stop")
 async def cmd_stop(message: Message):
     """
