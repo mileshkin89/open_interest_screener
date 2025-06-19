@@ -5,7 +5,7 @@
 services:
   bot:
     restart: always
-    build: .
+    image: ___template___
     container_name: oi-screener
     command: [ "python", "main.py" ]
     env_file:

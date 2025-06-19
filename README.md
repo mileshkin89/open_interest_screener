@@ -114,24 +114,24 @@ cp .env.sample .env
   Open [@BotFather](https://t.me/BotFather) in Telegram, use `/newbot`, and follow the prompts to create your bot and get the token.
 
 ###  Option 1: 🐳 Run with Docker
-* `docker-compose-prod.yml` - creates named volumes for logs and databases in local Linux storage.
+* `docker-compose-prod.yml` - creates named volumes for logs and databases in local Linux storage. Can be used to auto deploy using GitHub Actions
 
-* `docker-compose-dev.yml` - links container volumes and local project folders.
+* `docker-compose-dev.yml` - links container volumes and local project folders. Recommended for running on a local machine
 
 Choose what suits you best. Build and launch docker containers with the command:
 ```
-docker-compose -f docker-compose-prod.yml up --build
+docker-compose -f docker-compose-dev.yml up --build
 ```
 🚀 Your bot is now running inside a container!
 
 Run Docker Compose in detached mode:
 ```
-docker-compose -f docker-compose-prod.yml up -d
+docker-compose -f docker-compose-dev.yml up -d
 ```
 
 View Logs:
 ```
-docker-compose -f docker-compose-prod.yml logs
+docker-compose -f docker-compose-dev.yml logs
 ```
 
 ### Option 2: 💻 Run Locally (without Docker)

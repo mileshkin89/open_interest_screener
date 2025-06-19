@@ -1,3 +1,13 @@
+"""
+Create GitHub secrets:
+
+DOCKERHUB_USER - Your Docker Hub username used to authenticate when pushing images to your Docker Hub repository.
+DOCKERHUB_TOKEN - A Docker Hub access token or password associated with your Docker Hub account. 
+EC2_USER - The username used to log in to your EC2 instance (e.g., `ubuntu` for Ubuntu-based instances).
+EC2_HOST - The public IP address or hostname of your EC2 instance.
+EC2_KEY - The contents of your private SSH key (`.pem` or equivalent) that allows access to your EC2 instance.
+"""
+
 name: Build-Push-Deploy
 
 on:
