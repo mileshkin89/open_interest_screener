@@ -8,7 +8,7 @@ on:
     branches: [ "main" ]
 
 env:
-  IMAGE_NAME: ci_cd_test
+  IMAGE_NAME: oi_screener
   DOCKERHUB_USER: ${{ secrets.DOCKERHUB_USER }}
   DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
 
@@ -47,7 +47,7 @@ jobs:
       run: |
         ssh -o StrictHostKeyChecking=no ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << EOF
           set -e
-          cd /home/ubuntu/src/CI_CD_test/
+          cd /home/ubuntu/src/open_interest_screener/
           
           echo "📝 Updating docker-compose-prod.yml with image: $IMAGE_TAG"
           sed -i "s|image: .*|image: $IMAGE_TAG|" docker-compose-prod.yml
