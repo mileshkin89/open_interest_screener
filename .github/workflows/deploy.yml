@@ -1,0 +1,73 @@
+#Create GitHub secrets:
+#
+#DOCKERHUB_USER - Your Docker Hub username used to authenticate when pushing images to your Docker Hub repository.
+#DOCKERHUB_TOKEN - A Docker Hub access token or password associated with your Docker Hub account.
+#EC2_USER - The username used to log in to your EC2 instance (e.g., `ubuntu` for Ubuntu-based instances).
+#EC2_HOST - The public IP address or hostname of your EC2 instance.
+#EC2_KEY - The contents of your private SSH key (`.pem` or equivalent) that allows access to your EC2 instance.
+name: Build-Push-Deploy
+
+on:
+  workflow_run:
+    workflows: [ "Python application" ]
+    types:
+      - completed
+    branches: [ "main" ]
+
+env:
+  IMAGE_NAME: oi_screener
+  DOCKERHUB_USER: ${{ secrets.DOCKERHUB_USER }}
+  DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+
+jobs:
+  build_push_deploy:
+    name: Build, Push and Deploy
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repo
+      uses: actions/checkout@v4
+
+    - name: Set image tag
+      id: set_tag
+      run: |
+        TAG=$(date +'%Y%m%d%H%M%S')
+        echo "IMAGE_TAG=$DOCKERHUB_USER/$IMAGE_NAME:$TAG" >> $GITHUB_ENV
+        echo "Using tag: $DOCKERHUB_USER/$IMAGE_NAME:$TAG"
+
+    - name: Login to Docker Hub
+      run: echo "$DOCKERHUB_TOKEN" | docker login -u "$DOCKERHUB_USER" --password-stdin
+
+    - name: Build and push Docker image
+      run: |
+        docker build -t $IMAGE_TAG .
+        docker push $IMAGE_TAG
+
+    - name: Setup SSH
+      run: |
+        mkdir -p ~/.ssh
+        echo "${{ secrets.EC2_KEY }}" > ~/.ssh/id_rsa
+        chmod 600 ~/.ssh/id_rsa
+        ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts
+
+    - name: Deploy to EC2
+      run: |
+        ssh -o StrictHostKeyChecking=no ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << EOF
+          set -e
+          cd /home/ubuntu/src/open_interest_screener/
+          
+          echo "📝 Updating docker-compose-prod.yml with image: $IMAGE_TAG"
+          sed -i "s|image: .*|image: $IMAGE_TAG|" docker-compose-prod.yml
+          
+          echo "🔍 Updated image line:"
+          grep "image:" docker-compose-prod.yml
+          
+          echo "🧹 Stopping existing container..."
+          docker compose -f docker-compose-prod.yml down --remove-orphans || true
+          
+          echo "📥 Pulling new image..."
+          docker compose -f docker-compose-prod.yml pull
+          
+          echo "🚀 Starting updated container..."
+          docker compose -f docker-compose-prod.yml up -d
+        EOF

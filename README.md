@@ -1,6 +1,8 @@
 # 📈 Open Interest Screener v1.3.0
 A powerful tool for **monitoring Open Interest (OI) changes** on cryptocurrency futures using a Telegram bot.
 
+**You can use a real-time bot called** `@OI_futures_Screener_bot`
+
 ---
 1. [**Overview**](#-overview)
 2. [**Features**](#-features)
@@ -112,16 +114,25 @@ cp .env.sample .env
   Open [@BotFather](https://t.me/BotFather) in Telegram, use `/newbot`, and follow the prompts to create your bot and get the token.
 
 ###  Option 1: 🐳 Run with Docker
-* `docker-compose-prod.yml` - creates named volumes for logs and databases in local Linux storage.
+* `docker-compose-prod.yml` - creates named volumes for logs and databases in local Linux storage. Can be used to auto deploy using GitHub Actions
 
-* `docker-compose-dev.yml` - links container volumes and local project folders.
+* `docker-compose-dev.yml` - links container volumes and local project folders. Recommended for running on a local machine
 
-Choose what suits you best. And run it with the command:
-
+Choose what suits you best. Build and launch docker containers with the command:
 ```
-docker-compose -f docker-compose-*.yml up --build
+docker-compose -f docker-compose-dev.yml up --build
 ```
 🚀 Your bot is now running inside a container!
+
+Run Docker Compose in detached mode:
+```
+docker-compose -f docker-compose-dev.yml up -d
+```
+
+View Logs:
+```
+docker-compose -f docker-compose-dev.yml logs
+```
 
 ### Option 2: 💻 Run Locally (without Docker)
 
