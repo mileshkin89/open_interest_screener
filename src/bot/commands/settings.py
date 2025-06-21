@@ -19,13 +19,13 @@ from aiogram.types import Message, CallbackQuery, InlineKeyboardMarkup, InlineKe
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
-from src.bot.keyboards import settings_menu
-from src.bot.states import ScreenerSettings
-from src.db.bot_users import get_user_settings, update_user_settings
-from src.app_logic.default_settings import DEFAULT_SETTINGS, POPULAR_TIMEZONES_BY_OFFSET
-from src.app_logic.user_activity import mark_user_active
-from src.logging_config import get_logger
-from src.bot.msg_sender import notify
+from bot.keyboards import settings_menu
+from bot.states import ScreenerSettings
+from db.bot_users import get_user_settings, update_user_settings
+from app_logic.default_settings import DEFAULT_SETTINGS, POPULAR_TIMEZONES_BY_OFFSET
+from app_logic.user_activity import mark_user_active
+from logging_config import get_logger
+from bot.msg_sender import notify
 
 logger = get_logger(__name__)
 

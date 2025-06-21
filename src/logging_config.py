@@ -7,7 +7,7 @@ The log file is stored in the directory defined by `config.LOG_PATH`.
 """
 
 import logging
-from src.config import config
+from config import config
 
 
 def get_logger(name: str = __name__) -> logging.Logger:

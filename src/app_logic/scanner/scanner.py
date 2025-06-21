@@ -20,17 +20,16 @@ Requires:
 """
 
 import asyncio
-from datetime import datetime, timezone
+from datetime import datetime
 from typing import Callable
 from zoneinfo import ZoneInfo
 
-from src.app_logic.condition_handler import ConditionHandler
-from src.exchange_listeners.listener_manager import ListenerManager
-from src.db.hist_signal_db import init_db, trim_old_records
-from src.db.bot_users import get_user_settings
-from src.app_logic.default_settings import DEFAULT_SETTINGS, MIN_INTERVAL, SLEEP_TIMER_SECOND
-from src.exchange_listeners.exchange_urls import create_link
-from src.logging_config import get_logger
+from app_logic.condition_handler import ConditionHandler
+from exchange_listeners.listener_manager import ListenerManager
+from db.hist_signal_db import init_db, trim_old_records
+from app_logic.default_settings import DEFAULT_SETTINGS, MIN_INTERVAL, SLEEP_TIMER_SECOND
+from exchange_listeners.exchange_urls import create_link
+from logging_config import get_logger
 
 logger = get_logger(__name__)
 
@@ -57,7 +56,8 @@ class Scanner:
         self.handler = handler
         self.last_day = None
         self.symbols_by_exchange: dict[str, list[str]] = {}
-
+        # to avoid circular import
+        from db.bot_users import get_user_settings
 
     async def run_scanner(self,
                           user_id,

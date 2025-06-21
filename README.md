@@ -142,7 +142,8 @@ poetry install
 ### 7. Run the bot:
 
 ```bash
-poetry run python src/main.py
+cd src/
+poetry run python main.py
 ```
 🚀 The application is now up and running locally!
 

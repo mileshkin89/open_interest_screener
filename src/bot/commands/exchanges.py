@@ -11,9 +11,9 @@ Includes:
 
 from aiogram import F, Router
 from aiogram.types import Message, CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton
-from src.app_logic.user_activity import mark_user_active
-from src.db.bot_users import get_user_settings, update_user_settings
-from src.bot.msg_sender import notify
+from app_logic.user_activity import mark_user_active
+from db.bot_users import get_user_settings, update_user_settings
+from bot.msg_sender import notify
 
 
 router = Router()

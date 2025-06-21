@@ -12,7 +12,7 @@ Functions:
 """
 
 import aiosqlite
-from src.config import config
+from config import config
 
 config.DB_PATH.parent.mkdir(parents=True, exist_ok=True)
 

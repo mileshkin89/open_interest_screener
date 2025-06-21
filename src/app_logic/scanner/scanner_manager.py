@@ -25,10 +25,10 @@ Requires:
 
 import asyncio
 from typing import Callable
-from src.exchange_listeners.listener_manager import ListenerManager
-from src.app_logic.condition_handler import ConditionHandler
+from exchange_listeners.listener_manager import ListenerManager
+from app_logic.condition_handler import ConditionHandler
 from .scanner import Scanner
-from src.logging_config import get_logger
+from logging_config import get_logger
 
 logger = get_logger(__name__)
 

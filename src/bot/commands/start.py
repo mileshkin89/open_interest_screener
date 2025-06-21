@@ -16,14 +16,14 @@ Integrates with:
 
 from aiogram import F, Router
 from aiogram.types import Message, CallbackQuery
-from src.bot.keyboards import start_menu
-from src.db.bot_users import get_user_settings, update_user_settings
-from src.app_logic import start_or_restart_scanner, stop_scanner
-from src.app_logic.user_activity import mark_user_active
-from src.app_logic.default_settings import DEFAULT_SETTINGS, DEFAULT_EXCHANGES, DEFAULT_TIME_ZONE
-from src.bot.commands.settings import show_settings_menu
-from src.bot.commands.exchanges import show_exchanges_menu
-from src.bot.msg_sender import notify
+from bot.keyboards import start_menu
+from db.bot_users import get_user_settings, update_user_settings
+from app_logic import start_or_restart_scanner, stop_scanner
+from app_logic.user_activity import mark_user_active
+from app_logic.default_settings import DEFAULT_SETTINGS, DEFAULT_EXCHANGES, DEFAULT_TIME_ZONE
+from bot.commands.settings import show_settings_menu
+from bot.commands.exchanges import show_exchanges_menu
+from bot.msg_sender import notify
 
 
 router = Router()

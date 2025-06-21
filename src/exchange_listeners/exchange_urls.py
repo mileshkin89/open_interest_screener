@@ -12,8 +12,8 @@ Functions:
     create_link(exchange: str, symbol: str) -> str:
         Returns a direct trading URL for the specified symbol on the given exchange.
 """
-from src.app_logic.default_settings import DEFAULT_EXCHANGES
-from src.logging_config import get_logger
+from app_logic.default_settings import DEFAULT_EXCHANGES
+from logging_config import get_logger
 
 logger = get_logger(__name__)
 

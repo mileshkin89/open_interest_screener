@@ -20,7 +20,7 @@ from aiogram import Bot, Dispatcher
 from aiogram.client.default import DefaultBotProperties
 from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.enums.parse_mode import ParseMode
-from src.config import config
+from config import config
 
 # Dispatcher responsible for handling updates and storing FSM state in memory.
 dp = Dispatcher(storage=MemoryStorage())

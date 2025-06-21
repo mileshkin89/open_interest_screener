@@ -14,9 +14,9 @@ The class uses the official Binance Futures REST API and includes basic error ha
 import aiohttp
 import asyncio
 from datetime import datetime
-from src.exchange_listeners.base_listener import BaseExchangeListener
-from src.app_logic.default_settings import MIN_INTERVAL
-from src.logging_config import get_logger
+from exchange_listeners.base_listener import BaseExchangeListener
+from app_logic.default_settings import MIN_INTERVAL
+from logging_config import get_logger
 
 logger = get_logger(__name__)
 
