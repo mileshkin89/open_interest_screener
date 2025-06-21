@@ -56,8 +56,7 @@ class Scanner:
         self.handler = handler
         self.last_day = None
         self.symbols_by_exchange: dict[str, list[str]] = {}
-        # to avoid circular import
-        from db.bot_users import get_user_settings
+
 
     async def run_scanner(self,
                           user_id,
@@ -83,6 +82,9 @@ class Scanner:
         Raises:
             Exception: Logs errors if fetching data, cleaning DB, or processing conditions fails.
         """
+        # to avoid circular import
+        from db.bot_users import get_user_settings
+
         await init_db()
         while True:
 
