@@ -73,8 +73,8 @@ Automatically disables scanners for inactive users to conserve system resources
 ### 1. Clone the repository
 
 ```bash
-git clone https://github.com/mileshkin89/smart_tg_bot.git
-cd smart_tg_bot
+git clone https://github.com/mileshkin89/open_interest_screener.git
+cd open_interest_screener
 ```
 
 ### 2. Create and activate a virtual environment
