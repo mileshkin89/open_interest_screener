@@ -1,4 +1,4 @@
-# 📈 Open Interest Screener v1.3.0
+# 📈 Open Interest Screener v1.4.0
 A powerful tool for **monitoring Open Interest (OI) changes** on cryptocurrency futures using a Telegram bot.
 
 **You can use a real-time bot called** `@OI_futures_Screener_bot`
@@ -29,13 +29,12 @@ Early detection of OI spikes helps traders:
 * Make informed decisions before an asset gains mainstream attention
 
 ### 📅 Daily Crypto Monitoring
-* The list of monitored cryptocurrencies is updated daily
 * The bot stores historical data for each symbol
 * On signal trigger, it calculates how many similar signals occurred for that asset in the past 24 hours
 
 ### 💬 Each Alert Includes
 * 📈 **OI growth** detected
-* 💰 **Price and volume change** during the signal intervalма
+* 💰 **Price and volume change** during the signal interval
 * 🔁 **Signal frequency** for that asset in the last 24 hours
 * 🌐 **Exchange name** is clickable — it links directly to the trading page of the asset on the corresponding exchange
 * 🧾 **Symbol** is also clickable — for quick copy & paste into other tools or platforms
@@ -347,6 +346,10 @@ Manages multi-container setup and simplifies running services like the bot with 
 * In signal messages, exchange names are now clickable — they open the trading page for the instrument on the corresponding exchange
 * Symbols are now clickable — enabling quick copy-paste for use in external tools
 * Added the /run command as a shortcut to start the screener — improves user navigation and overall UI flow
+
+**V1.4.0**
+* Extracted the symbol collection logic from the Scanner class into a standalone SymbolListHandler class
+* SymbolListHandler runs as an independent background task and updates the list of tradable symbols once per minute
 
 ---
 ## 📄 License
