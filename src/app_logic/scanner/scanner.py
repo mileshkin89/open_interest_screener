@@ -29,6 +29,7 @@ from exchange_listeners.listener_manager import ListenerManager
 from db.hist_signal_db import init_db, trim_old_records
 from app_logic.default_settings import DEFAULT_SETTINGS, MIN_INTERVAL, SLEEP_TIMER_SECOND
 from exchange_listeners.exchange_urls import create_link
+from app_logic.symbol_list_handler import symbol_list
 from logging_config import get_logger
 
 logger = get_logger(__name__)
@@ -101,18 +102,14 @@ class Scanner:
                 except Exception as e:
                     logger.error(f"Database cleanup error: {e}", exc_info=True)
 
-                # Downloading the current list of cryptocurrencies
-                for exchange in self.manager.get_all_active_listeners():
-                    for name, listener in exchange.items():
-                        try:
-                            if name != None and listener != None:
-                                symbols = await listener.fetch_usdt_symbols()
-                                self.symbols_by_exchange[name] = symbols
-                                logger.debug(f"{name.upper()} symbols: {len(symbols)}")
-                        except Exception as e:
-                            logger.error(f"Error receiving exchange {name}: {e}", exc_info=True)
-
                 self.last_day = now
+
+
+            # Retrieve the list of symbols from the user's active exchanges
+            for exchange in self.manager.get_all_active_listeners():
+                for exchange_name in exchange.keys():
+                    self.symbols_by_exchange[exchange_name] = symbol_list.symbols_by_exchange[exchange_name]
+                    logger.debug(f'symbol_list in scanner = {self.symbols_by_exchange}')
 
             # Executed every 5 minutes. Can be changed in SLEEP_TIMER_SECOND
             for exchange_name, symbols in self.symbols_by_exchange.items():

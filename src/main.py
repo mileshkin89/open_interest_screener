@@ -18,6 +18,7 @@ from bot.menu import set_commands
 from db.bot_users import init_db
 from bot.commands import start, settings, exchanges
 from app_logic.user_activity import monitor_user_activity
+from app_logic.symbol_list_handler import symbol_list
 from app_logic import user_activity
 from logging_config import get_logger
 
@@ -36,6 +37,8 @@ async def main():
     """
     await init_db()
     await set_commands()
+
+    asyncio.create_task(symbol_list.get_symbol_list())
 
     # Start user activity monitor in the background (checks for inactive users)
     asyncio.create_task(monitor_user_activity())
