@@ -59,27 +59,12 @@ class BinanceListener(BaseExchangeListener):
         return symbols
 
 
-    async def fetch_oi(self, symbol: str, interval: str = MIN_INTERVAL, limit: int = 7,
-                       session: aiohttp.ClientSession = None) -> list[dict]:
-        """
-        Fetch historical Open Interest (OI) data for a specific trading pair.
-
-        Args:
-            symbol (str): Trading pair symbol (e.g., "BTCUSDT").
-            interval (str): Time interval in minutes (e.g., "15").
-            limit (int): Number of historical points to retrieve.
-            session (aiohttp.ClientSession, optional): Reusable HTTP session. Created if not provided.
-
-        Returns:
-            list[dict]: A list of open interest records with timestamps and values.
-        """
-        url = f"{self.BASE_URL}/futures/data/openInterestHist"
+    async def fetch_oi(self, symbol: str, session: aiohttp.ClientSession = None) -> dict:
+        url = f"{self.BASE_URL}/fapi/v1/openInterest"
         symbol = symbol.upper()
         result = []
         params = {
             "symbol": symbol,
-            "period": f"{interval}m",
-            "limit": limit
         }
         close_session = False
 
@@ -92,27 +77,25 @@ class BinanceListener(BaseExchangeListener):
                 if resp.status != 200:
                     text = await resp.text()
                     logger.warning(f"OI request failed for {symbol}: {resp.status}, {text}")
-                    return []
+                    return {}
 
                 data = await resp.json()
 
-                if not isinstance(data, list):
-                    logger.warning(f"OI data not list for {symbol}: {data}")
-                    return []
+                timestamp = data.get("time")
+                oi = data.get("openInterest")
 
-                for entry in data:
-                    oi = entry.get("sumOpenInterest")
-                    timestamp = entry.get("timestamp")
-                    if oi is None or timestamp is None:
-                        continue
-                    dt = datetime.fromtimestamp(timestamp / 1000)
-                    result.append({
-                        "exchange": "Binance",
-                        "symbol": symbol,
-                        "datetime": dt,
-                        "timestamp": timestamp,
-                        "open_interest": float(oi),
-                    })
+                if oi is None or timestamp is None:
+                    logger.warning(f"OI data empty for {symbol}")
+                    return {}
+
+                dt = datetime.fromtimestamp(timestamp / 1000)
+                result = {
+                    "exchange": "Binance",
+                    "symbol": symbol,
+                    "datetime": dt.strftime("%Y-%m-%d %H:%M:%S"),
+                    "timestamp": timestamp,
+                    "open_interest": float(oi),
+                }
 
         except (aiohttp.ClientError, asyncio.TimeoutError) as e:
             logger.error(f"Network error fetching OI for {symbol}: {e}")
@@ -124,65 +107,104 @@ class BinanceListener(BaseExchangeListener):
 
         return result
 
-
-    async def fetch_ohlcv(self, symbol: str, start_date: int, end_date: int,
-                          interval: str = MIN_INTERVAL,
-                          session: aiohttp.ClientSession = None) -> list[dict]:
-        """
-        Fetch historical OHLCV (Open, High, Low, Close, Volume) candle data.
-
-        Args:
-            symbol (str): Trading pair symbol (e.g., "BTCUSDT").
-            start_date (int): Start time in milliseconds since epoch.
-            end_date (int): End time in milliseconds since epoch.
-            interval (str): Time interval in minutes (e.g., "15").
-            session (aiohttp.ClientSession, optional): Reusable HTTP session. Created if not provided.
-
-        Returns:
-            list[dict]: A list of candle records with timestamp, close price, and volume.
-        """
+    async def fetch_ohlcv(self, symbol: str, session: aiohttp.ClientSession) -> dict | None:
         url = f"{self.BASE_URL}/fapi/v1/klines"
         symbol = symbol.upper()
-        result = []
         params = {
             "symbol": symbol,
-            "interval": f"{interval}m",
-            "startTime": int(start_date),
-            "endTime": int(end_date)
+            "interval": "1m",
+            "limit": 1
         }
-        close_session = False
-
-        if session is None:
-            session = aiohttp.ClientSession()
-            close_session = True
 
         try:
             async with session.get(url, params=params, timeout=10) as resp:
                 if resp.status != 200:
                     text = await resp.text()
                     logger.warning(f"OHLCV request failed for {symbol}: {resp.status}, {text}")
-                    return []
+                    return None
 
                 data = await resp.json()
-                if not isinstance(data, list):
-                    logger.warning(f"OHLCV data not list for {symbol}: {data}")
-                    return []
+                if not data or not isinstance(data, list) or len(data[0]) < 6:
+                    logger.warning(f"Invalid OHLCV response for {symbol}: {data}")
+                    return None
 
-                for candle in data:
-                    if len(candle) < 6:
-                        continue
-                    result.append({
-                        "timestamp": candle[0],
-                        "close": float(candle[4]),
-                        "volume": float(candle[5]),
-                    })
+                candle = data[0]
+                return {
+                    "symbol": symbol,
+                    "timestamp": candle[0],
+                    "datetime": datetime.fromtimestamp(candle[0] / 1000).strftime("%Y-%m-%d %H:%M:%S"),
+                    "open": float(candle[1]),
+                    "high": float(candle[2]),
+                    "low": float(candle[3]),
+                    "close": float(candle[4]),
+                    "volume": float(candle[5]),
+                }
 
         except (aiohttp.ClientError, asyncio.TimeoutError) as e:
             logger.error(f"Network error fetching OHLCV for {symbol}: {e}")
         except Exception as e:
             logger.error(f"Unexpected error fetching OHLCV for {symbol}: {e}")
-        finally:
-            if close_session:
-                await session.close()
 
-        return result
+        return None
+
+    # async def fetch_ohlcv(self, symbol: str, start_date: int, end_date: int,
+    #                       interval: str = MIN_INTERVAL,
+    #                       session: aiohttp.ClientSession = None) -> list[dict]:
+    #     """
+    #     Fetch historical OHLCV (Open, High, Low, Close, Volume) candle data.
+    #
+    #     Args:
+    #         symbol (str): Trading pair symbol (e.g., "BTCUSDT").
+    #         start_date (int): Start time in milliseconds since epoch.
+    #         end_date (int): End time in milliseconds since epoch.
+    #         interval (str): Time interval in minutes (e.g., "15").
+    #         session (aiohttp.ClientSession, optional): Reusable HTTP session. Created if not provided.
+    #
+    #     Returns:
+    #         list[dict]: A list of candle records with timestamp, close price, and volume.
+    #     """
+    #     url = f"{self.BASE_URL}/fapi/v1/klines"
+    #     symbol = symbol.upper()
+    #     result = []
+    #     params = {
+    #         "symbol": symbol,
+    #         "interval": f"{interval}m",
+    #         "startTime": int(start_date),
+    #         "endTime": int(end_date)
+    #     }
+    #     close_session = False
+    #
+    #     if session is None:
+    #         session = aiohttp.ClientSession()
+    #         close_session = True
+    #
+    #     try:
+    #         async with session.get(url, params=params, timeout=10) as resp:
+    #             if resp.status != 200:
+    #                 text = await resp.text()
+    #                 logger.warning(f"OHLCV request failed for {symbol}: {resp.status}, {text}")
+    #                 return []
+    #
+    #             data = await resp.json()
+    #             if not isinstance(data, list):
+    #                 logger.warning(f"OHLCV data not list for {symbol}: {data}")
+    #                 return []
+    #
+    #             for candle in data:
+    #                 if len(candle) < 6:
+    #                     continue
+    #                 result.append({
+    #                     "timestamp": candle[0],
+    #                     "close": float(candle[4]),
+    #                     "volume": float(candle[5]),
+    #                 })
+    #
+    #     except (aiohttp.ClientError, asyncio.TimeoutError) as e:
+    #         logger.error(f"Network error fetching OHLCV for {symbol}: {e}")
+    #     except Exception as e:
+    #         logger.error(f"Unexpected error fetching OHLCV for {symbol}: {e}")
+    #     finally:
+    #         if close_session:
+    #             await session.close()
+    #
+    #     return result

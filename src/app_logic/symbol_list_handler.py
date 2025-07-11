@@ -55,9 +55,9 @@ class SymbolListHandler:
 
         while True:
 
-            seconds = datetime.now().second
+            now = datetime.now().second
 
-            if seconds == START_FETCH_SYMBOLS_SECOND or seconds == START_FETCH_SYMBOLS_SECOND+1 or self.first_time:
+            if now == START_FETCH_SYMBOLS_SECOND or self.first_time:
                 self.first_time = False
 
                 for exchange in self.manager.get_all_active_listeners():
@@ -76,21 +76,18 @@ class SymbolListHandler:
 
                 await asyncio.sleep(SLEEP_FETCH_SYMBOLS_SECOND)
 
-            await asyncio.sleep(1)
+            await asyncio.sleep(0.3)
 
 
     async def store_symbols_in_file(self, name, symbols):
         file_name = f"{name}_symbols.json"
         config.STORE_SYMBOLS_PATH.mkdir(parents=True, exist_ok=True)
         symbols_file = config.STORE_SYMBOLS_PATH / file_name
-        print(symbols_file)
         try:
             with symbols_file.open("w", encoding="utf-8") as f:
                 json.dump(symbols, f)
         except Exception as e:
-            print(f"Error storing symbols in file: {e}")
-
-        print(f"In  {name}_symbols.json stored {len(symbols)} symbols")
+            logger.error(f"Error storing symbols in file: {e}")
 
 
 
