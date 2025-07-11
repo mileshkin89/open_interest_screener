@@ -40,6 +40,8 @@ class AppConfig(BaseSettings):
 
     LOG_PATH: Path = BASE_DIR / "logs" / "app.log"
 
+    STORE_SYMBOLS_PATH: Path = BASE_DIR / "symbols"
+
     model_config = SettingsConfigDict(
         env_file=str(BASE_DIR / ".env"),
         env_file_encoding="utf-8"

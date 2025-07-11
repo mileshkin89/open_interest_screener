@@ -10,6 +10,8 @@ at a defined time every minute, and stores them in memory for access by other co
 
 import asyncio
 from datetime import datetime
+import json
+from config import config
 from app_logic.default_settings import DEFAULT_EXCHANGES, START_FETCH_SYMBOLS_SECOND, SLEEP_FETCH_SYMBOLS_SECOND
 from exchange_listeners.listener_manager import ListenerManager
 from logging_config import get_logger
@@ -63,7 +65,11 @@ class SymbolListHandler:
                         try:
                             if name != None and listener != None:
                                 symbols = await listener.fetch_usdt_symbols()
+                                await self.store_symbols_in_file(name, symbols)
+
+                                # Temporary. Remove when separate scanner process is implemented
                                 self.symbols_by_exchange[name] = symbols
+
                                 logger.debug(f"{name.upper()} symbols: {len(symbols)}")
                         except Exception as e:
                             logger.error(f"Error receiving exchange {name}: {e}", exc_info=True)
@@ -71,6 +77,20 @@ class SymbolListHandler:
                 await asyncio.sleep(SLEEP_FETCH_SYMBOLS_SECOND)
 
             await asyncio.sleep(1)
+
+
+    async def store_symbols_in_file(self, name, symbols):
+        file_name = f"{name}_symbols.json"
+        config.STORE_SYMBOLS_PATH.mkdir(parents=True, exist_ok=True)
+        symbols_file = config.STORE_SYMBOLS_PATH / file_name
+        print(symbols_file)
+        try:
+            with symbols_file.open("w", encoding="utf-8") as f:
+                json.dump(symbols, f)
+        except Exception as e:
+            print(f"Error storing symbols in file: {e}")
+
+        print(f"In  {name}_symbols.json stored {len(symbols)} symbols")
 
 
 
