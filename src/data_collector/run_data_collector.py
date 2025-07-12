@@ -89,12 +89,15 @@ async def data_collect(exchange: str):
         await asyncio.sleep(0.3)
 
 
+def run_collector(exchange: str):
+    asyncio.run(data_collect(exchange))
+
 
 if __name__ == "__main__":
     if len(sys.argv) != 2:
         print("Usage: python run_data_collector.py <exchange>")
         sys.exit(1)
 
-    exchange_name = sys.argv[1].lower()
-    print(f"Starting data collector for {exchange_name} in run_data_collector.py")
-    asyncio.run(data_collect(exchange_name))
+    run_collector(sys.argv[1].lower())
+
+
