@@ -69,4 +69,3 @@ if __name__ == "__main__":
     logger.info("Bot started...")
     asyncio.run(main())
 
-# $env:PYTHONPATH="src"; poetry run python src/main.py

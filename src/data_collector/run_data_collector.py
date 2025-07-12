@@ -8,15 +8,38 @@ from datetime import datetime
 from pathlib import Path
 
 from exchange_listeners.listener_manager import ListenerManager
+from app_logic.default_settings import SLEEP_DATA_COLLECTOR
 from config import config
-from logging_config import get_logger
+import logging
 
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 
-logger = get_logger(__name__)
-
 OI_STORAGE_DIR = config.STORE_SYMBOLS_PATH
-TIME_CHECK_INTERVAL = 50
+
+
+def configure_logger(exchange: str):
+
+    logs_dir = config.LOG_PATH.parent
+    logs_dir.mkdir(exist_ok=True)
+    print("logs_dir = ", logs_dir)
+
+    log_file = logs_dir / f"collector_{exchange}.log"
+    print("log_file = ", log_file)
+
+    logger = logging.getLogger(f"collector_{exchange}")
+    logger.setLevel(logging.INFO)
+
+    file_handler = logging.FileHandler(log_file, mode='a', encoding='utf-8')
+    formatter = logging.Formatter(
+        fmt='%(asctime)s - %(levelname)s - %(message)s',
+        datefmt='%Y-%m-%d %H:%M:%S'
+    )
+    file_handler.setFormatter(formatter)
+    logger.addHandler(file_handler)
+
+    logger.propagate = False
+
+    return logger
 
 
 async def get_symbols_list(exchange: str):
@@ -85,12 +108,15 @@ async def data_collect(exchange: str):
             except Exception as e:
                 logger.error(f"Error collecting OI from {exchange}: {e}", exc_info=True)
 
-            await asyncio.sleep(TIME_CHECK_INTERVAL)
+            await asyncio.sleep(SLEEP_DATA_COLLECTOR)
         await asyncio.sleep(0.3)
 
 
 def run_collector(exchange: str):
+    global logger
+    logger = configure_logger(exchange)
     asyncio.run(data_collect(exchange))
+
 
 
 if __name__ == "__main__":

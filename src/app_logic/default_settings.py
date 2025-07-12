@@ -49,6 +49,15 @@ Used to throttle update frequency between checks.
 """
 
 
+SLEEP_DATA_COLLECTOR = 50
+"""
+int: Number of seconds to sleep after collecting and saving data at the end of each minute.
+
+Used to pause the collector after the critical data-fetching moment (e.g., second 59),
+ensuring it doesn't immediately re-enter the loop and consume unnecessary CPU resources.
+"""
+
+
 SLEEP_TIMER_SECOND = 300
 """
 int: Default interval (in seconds) between scanner cycles or background checks (e.g., 5 minutes).
