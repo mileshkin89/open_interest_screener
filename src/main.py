@@ -33,8 +33,7 @@ logger = get_logger(__name__)
 
 async def main():
 
-    pool = create_pool()
-    await pool.open()
+    pool = await create_pool()
 
     await init_user_table(pool)
     logger.info("Initialization 'user_settings' table complete.")

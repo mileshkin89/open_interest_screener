@@ -6,9 +6,17 @@ from config import config
 
 _pool: Optional[AsyncConnectionPool] = None
 
-def create_pool() -> AsyncConnectionPool:
+async def create_pool() -> AsyncConnectionPool:
     global _pool
     if _pool is None:
         _pool = AsyncConnectionPool(config.DATABASE_URL)
+        await _pool.open()
+    if not _pool.open:
+        await _pool.open()
+
     return _pool
 
+# --usage--
+# from connection import create_pool
+# async def some_function():
+#     pool = await create_pool()
