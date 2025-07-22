@@ -36,8 +36,12 @@ async def main():
     await pool.open()
 
     await init_user_table(pool)
+    logger.info("Initialization 'user_settings' table complete.")
     await init_timescale_table(pool)
-    await set_commands()
+    logger.info("Initialization 'history_data' table complete.")
+
+    asyncio.create_task(retention_worker(pool))
+    logger.info("Started delete old data from 'history_data' table.")
 
     asyncio.create_task(symbol_list.get_symbol_list())
     logger.info("Started update symbol list task.")
@@ -49,12 +53,14 @@ async def main():
     for exchange in DEFAULT_EXCHANGES:
         start_collector_process(exchange)
 
-    # Register command routers
-    dp.include_router(start.router)
-    dp.include_router(settings.router)
-    dp.include_router(exchanges.router)
-    dp.include_router(user_activity.router)
-    logger.info("Started bot commands.")
+    await set_commands()
+
+    # # Register command routers
+    # dp.include_router(start.router)
+    # dp.include_router(settings.router)
+    # dp.include_router(exchanges.router)
+    # dp.include_router(user_activity.router)
+    # logger.info("Started bot commands.")
 
     # Start polling the Telegram API
     await bot_.delete_webhook(drop_pending_updates=True)
