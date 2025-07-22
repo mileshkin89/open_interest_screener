@@ -14,7 +14,7 @@ Includes error handling, logging, and supports integration with aiohttp session 
 
 import aiohttp
 import asyncio
-from datetime import datetime
+from datetime import datetime, timezone
 from exchange_listeners.api_listeners.base_listener import BaseExchangeListener
 from logging_config import get_logger
 
@@ -72,7 +72,7 @@ class BinanceListener(BaseExchangeListener):
 
         Returns:
             dict: Dictionary containing:
-                - exchange (str): "Binance"
+                - exchange (str): "binance"
                 - symbol (str)
                 - datetime (str): Human-readable timestamp
                 - timestamp (int): Epoch milliseconds
@@ -109,12 +109,11 @@ class BinanceListener(BaseExchangeListener):
                     logger.warning(f"OI data empty for {symbol}")
                     return {}
 
-                dt = datetime.fromtimestamp(timestamp / 1000)
+                dt = datetime.fromtimestamp(timestamp / 1000, tz=timezone.utc)
                 result = {
-                    "exchange": "Binance",
+                    "exchange": "binance",
                     "symbol": symbol,
-                    "datetime": dt.strftime("%Y-%m-%d %H:%M:%S"),
-                    "timestamp": timestamp,
+                    "timestamp": dt,
                     "open_interest": float(oi),
                 }
 
@@ -138,9 +137,9 @@ class BinanceListener(BaseExchangeListener):
 
         Returns:
             dict | None: Dictionary with keys:
+                - exchange (str): "binance"
                 - symbol (str)
                 - timestamp (int): Open time (milliseconds)
-                - datetime (str): Human-readable open time
                 - open (float)
                 - high (float)
                 - low (float)
@@ -171,10 +170,14 @@ class BinanceListener(BaseExchangeListener):
                     return None
 
                 candle = data[0]
+
+                timestamp = candle[0]
+                dt = datetime.fromtimestamp(timestamp / 1000, tz=timezone.utc)
+
                 return {
+                    "exchange": "binance",
                     "symbol": symbol,
-                    "timestamp": candle[0],
-                    "datetime": datetime.fromtimestamp(candle[0] / 1000).strftime("%Y-%m-%d %H:%M:%S"),
+                    "timestamp": dt,
                     "open": float(candle[1]),
                     "high": float(candle[2]),
                     "low": float(candle[3]),

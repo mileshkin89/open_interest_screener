@@ -19,7 +19,8 @@ from bot.bot_init import bot_, dp
 from bot.menu import set_commands
 from db.connection import create_pool
 from db.bot_users_pg import init_user_table
-from db.history_data import init_timescale_table
+from db.history_data import init_timescale_table, enable_retention_policy
+from db.retention_worker import retention_worker
 from bot.commands import start, settings, exchanges
 from app_logic.user_activity import monitor_user_activity
 from app_logic.symbol_list_handler import symbol_list
@@ -40,8 +41,16 @@ async def main():
     await init_timescale_table(pool)
     logger.info("Initialization 'history_data' table complete.")
 
+
+    try:
+        await enable_retention_policy(pool)
+        logger.info("Retention policy enabled for 'history_data'")
+    except Exception as e:
+        logger.warning(f"Retention policy might already exist or failed: {e}")
+
     asyncio.create_task(retention_worker(pool))
     logger.info("Started delete old data from 'history_data' table.")
+
 
     asyncio.create_task(symbol_list.get_symbol_list())
     logger.info("Started update symbol list task.")
@@ -53,14 +62,14 @@ async def main():
     for exchange in DEFAULT_EXCHANGES:
         start_collector_process(exchange)
 
-    await set_commands()
 
-    # # Register command routers
+    await set_commands()
     # dp.include_router(start.router)
     # dp.include_router(settings.router)
     # dp.include_router(exchanges.router)
     # dp.include_router(user_activity.router)
     # logger.info("Started bot commands.")
+
 
     # Start polling the Telegram API
     await bot_.delete_webhook(drop_pending_updates=True)

@@ -5,13 +5,13 @@ from psycopg_pool import AsyncConnectionPool
 from app_logic.default_settings import DEFAULT_SETTINGS, DEFAULT_EXCHANGES, DEFAULT_TIME_ZONE
 
 
-CREATE_TABLE_QUERY = """
+CREATE_TABLE_QUERY = f"""
 CREATE TABLE IF NOT EXISTS user_settings (
     user_id BIGINT PRIMARY KEY,
-    period INTEGER DEFAULT %(period)s,
-    threshold INTEGER DEFAULT %(threshold)s,
-    active_exchanges TEXT DEFAULT %(exchanges)s,
-    time_zone VARCHAR(50) DEFAULT %(time_zone)s
+    period INTEGER DEFAULT {DEFAULT_SETTINGS["period"]},
+    threshold INTEGER DEFAULT {DEFAULT_SETTINGS["threshold"]},
+    active_exchanges TEXT DEFAULT '{json.dumps(DEFAULT_EXCHANGES)}',
+    time_zone VARCHAR(50) DEFAULT '{DEFAULT_TIME_ZONE}'
 )
 """
 
