@@ -17,7 +17,9 @@ import asyncio
 from app_logic.default_settings import DEFAULT_EXCHANGES
 from bot.bot_init import bot_, dp
 from bot.menu import set_commands
-from db.bot_users import init_db
+from db.connection import create_pool
+from db.bot_users_pg import init_user_table
+from db.history_data import init_timescale_table
 from bot.commands import start, settings, exchanges
 from app_logic.user_activity import monitor_user_activity
 from app_logic.symbol_list_handler import symbol_list
@@ -29,16 +31,12 @@ logger = get_logger(__name__)
 
 
 async def main():
-    """
-    Main asynchronous function that initializes and starts the bot.
 
-    - Initializes the SQLite database for storing user settings.
-    - Sets bot commands for the Telegram interface.
-    - Launches a background task to monitor inactive users.
-    - Registers command handlers (routers) for user interaction.
-    - Clears any pending updates and starts polling the Telegram API.
-    """
-    await init_db()
+    pool = create_pool()
+    await pool.open()
+
+    await init_user_table(pool)
+    await init_timescale_table(pool)
     await set_commands()
 
     asyncio.create_task(symbol_list.get_symbol_list())
