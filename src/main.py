@@ -17,9 +17,9 @@ import asyncio
 from app_logic.default_settings import DEFAULT_EXCHANGES
 from bot.bot_init import bot_, dp
 from bot.menu import set_commands
-from db.repo_factory import create_pool, get_user_settings_repo
+from db.repo_factory import create_pool, get_user_settings_repo, get_history_repo
 from db.repositories.user_settings import UserSettingsRepository
-from db.repositories.history_data import init_timescale_table, enable_retention_policy
+from db.repositories.history_data import HistoryDataRepository
 from db.retention_worker import retention_worker
 from app_logic.user_activity import monitor_user_activity
 from app_logic.symbol_list_handler import symbol_list
@@ -33,15 +33,16 @@ async def main():
 
     pool = await create_pool()
     user_repo: UserSettingsRepository = await get_user_settings_repo()
+    history_repo: HistoryDataRepository = await get_history_repo()
 
     await user_repo.init_table()
     logger.info("Initialization 'user_settings' table complete.")
-    await init_timescale_table(pool)
+    await history_repo.init_table()
     logger.info("Initialization 'history_data' table complete.")
 
 
     try:
-        await enable_retention_policy(pool)
+        await history_repo.enable_retention_policy()
         logger.info("Retention policy enabled for 'history_data'")
     except Exception as e:
         logger.warning(f"Retention policy might already exist or failed: {e}")

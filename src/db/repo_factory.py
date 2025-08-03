@@ -1,5 +1,5 @@
 """
-connection.py
+repo_factory.py
 
 This module provides a global factory for creating and accessing shared resources,
 such as the PostgreSQL async connection pool and repository instances.
@@ -10,7 +10,7 @@ It implements lazy initialization for:
 
 Usage example:
 --------------
-from db.repo_factory import create_pool, get_user_settings_repo
+from db.repo_factory import create_pool, get_user_settings_repo, get_history_repo
 
 async def some_function():
     pool = await create_pool()
@@ -18,6 +18,10 @@ async def some_function():
 async def handle_user_command(user_id: int):
     repo = await get_user_settings_repo()
     settings = await repo.get_user_settings(user_id)
+
+ async def handle_data_command(data: list[dict]):
+    repo = await get_history_repo()
+    await repo.write_ohlcv(data)
 """
 
 from typing import Optional
@@ -25,10 +29,12 @@ from psycopg_pool import AsyncConnectionPool
 
 from config import config
 from db.repositories.user_settings import UserSettingsRepository
+from db.repositories.history_data import HistoryDataRepository
 
 
 _pool: Optional[AsyncConnectionPool] = None
 _user_settings_repo: Optional[UserSettingsRepository] = None
+_history_repo: Optional[HistoryDataRepository] = None
 
 
 async def create_pool() -> AsyncConnectionPool:
@@ -76,3 +82,24 @@ async def get_user_settings_repo() -> UserSettingsRepository:
         _user_settings_repo = UserSettingsRepository(pool)
     return _user_settings_repo
 
+
+async def get_history_repo() -> HistoryDataRepository:
+    """
+    Lazily creates and returns a singleton instance of HistoryDataRepository.
+
+    Ensures the repository is initialized with a valid connection pool, using `create_pool()` if necessary.
+
+    Returns:
+        HistoryDataRepository: An instance ready to perform database operations on historical data.
+
+    Example:
+        >>> from db.repo_factory import get_history_repo
+        >>> async def collect_and_store(data: list[dict]):
+        ...     repo = await get_history_repo()
+        ...     await repo.write_ohlcv(data)
+    """
+    global _history_repo
+    if _history_repo is None:
+        pool = await create_pool()
+        _history_repo = HistoryDataRepository(pool)
+    return _history_repo

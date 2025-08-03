@@ -17,8 +17,8 @@ import aiohttp
 import json
 from datetime import datetime
 
-from db.repo_factory import create_pool
-from db.repositories.history_data import write_oi_to_db, write_ohlcv_to_db
+from db.repo_factory import get_history_repo
+from db.repositories.history_data import HistoryDataRepository
 from exchange_listeners.listener_manager import ListenerManager
 from app_logic.default_settings import SLEEP_DATA_COLLECTOR
 from config import config
@@ -127,8 +127,6 @@ async def data_collect(exchange: str):
     manager = ListenerManager(enabled_exchanges=[exchange])
     listener = manager.get_listener(exchange)
 
-    pool = await create_pool()
-
     if not listener:
         logger.error(f"No listener for exchange {exchange}")
         return
@@ -140,12 +138,14 @@ async def data_collect(exchange: str):
             try:
                 symbols = await get_symbols_list(exchange)
 
+                history_repo: HistoryDataRepository = await get_history_repo()
+
                 oi_data = await fetch_data(symbols, listener.fetch_oi)
-                await write_oi_to_db(pool, oi_data)
+                await history_repo.write_oi(oi_data)
 
                 # await asyncio.sleep(1)
                 ohlcv = await fetch_data(symbols, listener.fetch_ohlcv)
-                await write_ohlcv_to_db(pool, ohlcv)
+                await history_repo.write_ohlcv(ohlcv)
             except Exception as e:
                 logger.error(f"Error collecting OI from {exchange}: {e}", exc_info=True)
 

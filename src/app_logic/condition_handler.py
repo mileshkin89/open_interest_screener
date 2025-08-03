@@ -25,8 +25,8 @@ import aiohttp
 from datetime import datetime
 from exchange_listeners.api_listeners.base_listener import BaseExchangeListener
 from app_logic.default_settings import DEFAULT_SETTINGS, MIN_INTERVAL
-from db.repositories.history_data import get_historical_oi
-from db.repo_factory import create_pool
+from db.repo_factory import get_history_repo
+from db.repositories.history_data import HistoryDataRepository
 from logging_config import get_logger
 
 logger = get_logger(__name__)
@@ -278,9 +278,10 @@ class ConditionHandler:
         """
         _count_signal = 0
         _delta_oi = 0
-        pool = await create_pool()
 
-        history_io = await get_historical_oi(pool, symbol, exchange_name, before_date)
+        history_repo: HistoryDataRepository = await get_history_repo()
+
+        history_io = await history_repo.get_historical_oi(symbol, exchange_name, before_date)
         if not history_io:
             return 0
 
