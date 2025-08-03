@@ -1,115 +1,112 @@
 from psycopg_pool import AsyncConnectionPool
 from psycopg import errors
+from app_logic.default_settings import DEFAULT_EXCHANGES
 from logging_config import get_logger
 
 logger = get_logger(__name__)
 
 
 class HistoryDataRepository:
-    """
-    Repository for managing the `history_data` table, including initialization,
-    retention policies, and insertions of Open Interest and OHLCV data.
-    """
-
-    CREATE_HISTORY_TABLE = """
-    CREATE TABLE IF NOT EXISTS history_data (
-        symbol TEXT NOT NULL,
-        exchange TEXT NOT NULL,
-        timestamp TIMESTAMPTZ NOT NULL,
-        open_interest DOUBLE PRECISION,
-        open DOUBLE PRECISION,
-        high DOUBLE PRECISION,
-        low DOUBLE PRECISION,
-        close DOUBLE PRECISION,
-        volume DOUBLE PRECISION,
-        PRIMARY KEY (symbol, exchange, timestamp)
-    );
-    """
-
-    CREATE_HYPERTABLE = """
-    SELECT create_hypertable('history_data', 'timestamp', if_not_exists => TRUE);
-    """
 
     def __init__(self, pool: AsyncConnectionPool):
         self.pool = pool
 
+
     async def init_table(self):
-        """
-        Initializes the `history_data` table as a TimescaleDB hypertable.
-        Optionally drops the table before creation (useful for development).
-        """
         async with self.pool.connection() as conn:
-            # for dev, remove later:
-            await conn.execute("DROP TABLE IF EXISTS history_data;")
+            for exchange in DEFAULT_EXCHANGES:
+                await conn.execute(
+                    f"""
+                    CREATE TABLE IF NOT EXISTS {exchange}_history_oi (
+                            symbol TEXT NOT NULL,
+                            timestamp TIMESTAMPTZ NOT NULL,
+                            open_interest DOUBLE PRECISION,
+                            PRIMARY KEY (symbol, timestamp)
+                        );
+                    """
+                )
+                await conn.execute(
+                    f"""
+                    SELECT create_hypertable('{exchange}_history_oi', 'timestamp', if_not_exists => TRUE);
+                    """
+                )
+                await conn.execute(
+                    f"""
+                    CREATE TABLE IF NOT EXISTS {exchange}_history_ohlcv (
+                            symbol TEXT NOT NULL,
+                            timestamp TIMESTAMPTZ NOT NULL,
+                            open DOUBLE PRECISION,
+                            high DOUBLE PRECISION,
+                            low DOUBLE PRECISION,
+                            close DOUBLE PRECISION,
+                            volume DOUBLE PRECISION,
+                            PRIMARY KEY (symbol, timestamp)
+                        );
+                    """
+                )
+                await conn.execute(
+                    f"""
+                    SELECT create_hypertable('{exchange}_history_ohlcv', 'timestamp', if_not_exists => TRUE);
+                    """
+                )
             await conn.commit()
 
-            await conn.execute(self.CREATE_HISTORY_TABLE)
-            await conn.execute(self.CREATE_HYPERTABLE)
-            await conn.commit()
 
     async def enable_retention_policy(self):
-        """
-        Adds a retention policy to the `history_data` hypertable, retaining only 1 day of data.
-        """
         async with self.pool.connection() as conn:
             async with conn.cursor() as cur:
-                try:
-                    await cur.execute("""
-                        SELECT add_retention_policy('history_data', INTERVAL '1 day');
-                    """)
-                except errors.DuplicateObject:
-                    pass
+                for exchange in DEFAULT_EXCHANGES:
+                    try:
+                        await cur.execute(f"""
+                            SELECT add_retention_policy('{exchange}_history_oi', INTERVAL '1 day');
+                        """)
+                        await cur.execute(f"""
+                            SELECT add_retention_policy('{exchange}_history_ohlcv', INTERVAL '1 day');
+                        """)
+                    except errors.DuplicateObject:
+                        pass
+
 
     def _filter_valid_keys(self, data: list[dict], required_keys: set[str]) -> list[dict]:
         return [d for d in data if required_keys.issubset(d)]
 
-    async def write_oi(self, data: list[dict]):
-        """
-        Inserts Open Interest data into the table.
+    async def write_oi(self, data: list[dict], exchange: str):
 
-        Args:
-            data (list[dict]): List of dictionaries with keys:
-                - symbol, exchange, timestamp, open_interest
-        """
-        if not data:
+        if not data or not exchange:
             return
 
-        required_keys = {"symbol", "exchange", "timestamp", "open_interest"}
+        required_keys = {"symbol", "timestamp", "open_interest"}
         data = self._filter_valid_keys(data, required_keys)
 
         async with self.pool.connection() as conn:
             async with conn.cursor() as cur:
-                await cur.executemany("""
-                    INSERT INTO history_data (symbol, exchange, timestamp, open_interest)
-                    VALUES (%(symbol)s, %(exchange)s, %(timestamp)s, %(open_interest)s)
-                    ON CONFLICT (symbol, exchange, timestamp) DO NOTHING
+                await cur.executemany(f"""
+                    INSERT INTO {exchange}_history_oi (symbol, timestamp, open_interest)
+                    VALUES (%(symbol)s, %(timestamp)s, %(open_interest)s)
+                    ON CONFLICT (symbol, timestamp) DO NOTHING
                 """, data)
             await conn.commit()
-        logger.info(f"Wrote {len(data)} OI rows to history_data table.")
+        logger.info(f"Wrote {len(data)} OI rows to `{exchange}_history_oi` table.")
 
-    async def write_ohlcv(self, data: list[dict]):
-        """
-        Inserts OHLCV data into the table.
 
-        Args:
-            data (list[dict]): List of dictionaries with keys:
-                - symbol, exchange, timestamp, open, high, low, close, volume
-        """
-        if not data:
+    async def write_ohlcv(self, data: list[dict], exchange: str):
+
+        if not data or not exchange:
             return
 
-        required_keys = {"symbol", "exchange", "timestamp", "open", "high", "low", "close", "volume"}
+        required_keys = {"symbol", "timestamp", "open", "high", "low", "close", "volume"}
         data = self._filter_valid_keys(data, required_keys)
 
         async with self.pool.connection() as conn:
             async with conn.cursor() as cur:
-                await cur.executemany("""
-                    INSERT INTO history_data (symbol, exchange, timestamp, open, high, low, close, volume)
-                    VALUES (%(symbol)s, %(exchange)s, %(timestamp)s, %(open)s, %(high)s, %(low)s, %(close)s, %(volume)s)
-                    ON CONFLICT (symbol, exchange, timestamp) DO NOTHING
+                await cur.executemany(f"""
+                    INSERT INTO {exchange}_history_ohlcv (symbol, timestamp, open, high, low, close, volume)
+                    VALUES (%(symbol)s, %(timestamp)s, %(open)s, %(high)s, %(low)s, %(close)s, %(volume)s)
+                    ON CONFLICT (symbol, timestamp) DO NOTHING
                 """, data)
             await conn.commit()
-        logger.info(f"Wrote {len(data)} OHLCV rows to history_data table.")
+        logger.info(f"Wrote {len(data)} OHLCV rows to `{exchange}_history_ohlcv` table.")
+
 
     async def get_historical_oi(self, symbol: str, exchange: str, before_date: int) -> list[dict]:
         """
@@ -127,12 +124,12 @@ class HistoryDataRepository:
 
         async with self.pool.connection() as conn:
             async with conn.execute(
-                """
-                SELECT timestamp, open_interest FROM history_data
-                WHERE symbol = $1 AND exchange = $2 AND timestamp <= $3 AND timestamp >= $4
+                f"""
+                SELECT timestamp, open_interest FROM {exchange}_history_oi
+                WHERE symbol = $1  AND timestamp <= $2 AND timestamp >= $3
                 ORDER BY timestamp DESC
                 """,
-                (symbol, exchange, before_date, since_date)
+                (symbol, before_date, since_date)
             ) as cursor:
                 rows = await cursor.fetchall()
                 return [dict(row) for row in rows]

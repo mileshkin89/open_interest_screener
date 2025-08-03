@@ -17,7 +17,7 @@ import asyncio
 from app_logic.default_settings import DEFAULT_EXCHANGES
 from bot.bot_init import bot_, dp
 from bot.menu import set_commands
-from db.repo_factory import create_pool, get_user_settings_repo, get_history_repo
+from db.repo_factory import get_user_settings_repo, get_history_repo
 from db.repositories.user_settings import UserSettingsRepository
 from db.repositories.history_data import HistoryDataRepository
 from db.retention_worker import retention_worker
@@ -31,24 +31,23 @@ logger = get_logger(__name__)
 
 async def main():
 
-    pool = await create_pool()
     user_repo: UserSettingsRepository = await get_user_settings_repo()
     history_repo: HistoryDataRepository = await get_history_repo()
 
     await user_repo.init_table()
     logger.info("Initialization 'user_settings' table complete.")
     await history_repo.init_table()
-    logger.info("Initialization 'history_data' table complete.")
+    logger.info("Initialization 'exchange_history_data' tables complete.")
 
 
     try:
         await history_repo.enable_retention_policy()
-        logger.info("Retention policy enabled for 'history_data'")
+        logger.info("Retention policy enabled for history data")
     except Exception as e:
         logger.warning(f"Retention policy might already exist or failed: {e}")
 
-    asyncio.create_task(retention_worker(pool))
-    logger.info("Started delete old data from 'history_data' table.")
+    asyncio.create_task(retention_worker())
+    logger.info("Started delete old data from history.")
 
 
     asyncio.create_task(symbol_list.get_symbol_list())

@@ -82,6 +82,9 @@ async def get_symbols_list(exchange: str):
     if symbols_file.exists():
         with symbols_file.open("r", encoding="utf-8") as f:
             symbols = json.load(f)
+            if not symbols:
+                logger.warning(f"No symbols found for {exchange}")
+                symbols = []
             return symbols
 
 
@@ -141,11 +144,11 @@ async def data_collect(exchange: str):
                 history_repo: HistoryDataRepository = await get_history_repo()
 
                 oi_data = await fetch_data(symbols, listener.fetch_oi)
-                await history_repo.write_oi(oi_data)
+                await history_repo.write_oi(oi_data, exchange)
 
                 # await asyncio.sleep(1)
                 ohlcv = await fetch_data(symbols, listener.fetch_ohlcv)
-                await history_repo.write_ohlcv(ohlcv)
+                await history_repo.write_ohlcv(ohlcv, exchange)
             except Exception as e:
                 logger.error(f"Error collecting OI from {exchange}: {e}", exc_info=True)
 
