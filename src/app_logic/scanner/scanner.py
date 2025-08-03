@@ -23,6 +23,8 @@ import asyncio
 from typing import Callable
 from zoneinfo import ZoneInfo
 
+from db.repo_factory import get_user_settings_repo
+from db.repositories.user_settings import UserSettingsRepository
 from app_logic.condition_handler import ConditionHandler
 from exchange_listeners.listener_manager import ListenerManager
 from app_logic.default_settings import DEFAULT_SETTINGS, MIN_INTERVAL, SLEEP_TIMER_SECOND
@@ -30,7 +32,6 @@ from exchange_listeners.exchange_urls import create_link
 from app_logic.symbol_list_handler import symbol_list
 from logging_config import get_logger
 
-from db.repositories.bot_users_pg import get_user_settings
 
 logger = get_logger(__name__)
 
@@ -104,7 +105,9 @@ class Scanner:
                 try:
                     signal_coins = await self.handler.is_signal(symbols, threshold_period, MIN_INTERVAL, threshold)
 
-                    user_settings = await get_user_settings(user_id)
+                    user_repo: UserSettingsRepository = await get_user_settings_repo()
+
+                    user_settings = await user_repo.get_user_settings(user_id)
                     time_zone = user_settings.get("time_zone", "UTC")
                 except AttributeError as e:
                     logger.error(f"Error AttributeError: {e}", exc_info=True)

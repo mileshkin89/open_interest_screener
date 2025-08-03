@@ -26,7 +26,7 @@ from datetime import datetime
 from exchange_listeners.api_listeners.base_listener import BaseExchangeListener
 from app_logic.default_settings import DEFAULT_SETTINGS, MIN_INTERVAL
 from db.repositories.history_data import get_historical_oi
-from db.connection import create_pool
+from db.repo_factory import create_pool
 from logging_config import get_logger
 
 logger = get_logger(__name__)

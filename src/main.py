@@ -17,8 +17,8 @@ import asyncio
 from app_logic.default_settings import DEFAULT_EXCHANGES
 from bot.bot_init import bot_, dp
 from bot.menu import set_commands
-from db.connection import create_pool
-from db.repositories.bot_users_pg import init_user_table
+from db.repo_factory import create_pool, get_user_settings_repo
+from db.repositories.user_settings import UserSettingsRepository
 from db.repositories.history_data import init_timescale_table, enable_retention_policy
 from db.retention_worker import retention_worker
 from app_logic.user_activity import monitor_user_activity
@@ -32,8 +32,9 @@ logger = get_logger(__name__)
 async def main():
 
     pool = await create_pool()
+    user_repo: UserSettingsRepository = await get_user_settings_repo()
 
-    await init_user_table(pool)
+    await user_repo.init_table()
     logger.info("Initialization 'user_settings' table complete.")
     await init_timescale_table(pool)
     logger.info("Initialization 'history_data' table complete.")

@@ -17,7 +17,7 @@ import aiohttp
 import json
 from datetime import datetime
 
-from db.connection import create_pool
+from db.repo_factory import create_pool
 from db.repositories.history_data import write_oi_to_db, write_ohlcv_to_db
 from exchange_listeners.listener_manager import ListenerManager
 from app_logic.default_settings import SLEEP_DATA_COLLECTOR
