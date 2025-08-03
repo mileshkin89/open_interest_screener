@@ -36,11 +36,16 @@ class AppConfig(BaseSettings):
     """
     TG_BOT_API_KEY: str = os.getenv("TG_BOT_API_KEY")
 
-    DB_PATH: Path = BASE_DIR / "storage" / "signals.db"
+    DB_PATH: Path = BASE_DIR / "storage"
 
     LOG_PATH: Path = BASE_DIR / "logs" / "app.log"
 
     STORE_SYMBOLS_PATH: Path = BASE_DIR / "symbols"
+
+    DATABASE_URL: str = (
+        f"postgresql://{os.getenv('POSTGRES_USER')}:{os.getenv('POSTGRES_PASSWORD')}@"
+        f"{os.getenv('POSTGRES_HOST')}:{os.getenv('POSTGRES_PORT')}/{os.getenv('POSTGRES_DB')}"
+    )
 
     model_config = SettingsConfigDict(
         env_file=str(BASE_DIR / ".env"),
@@ -49,4 +54,3 @@ class AppConfig(BaseSettings):
 
 # Singleton config instance used throughout the application
 config = AppConfig()
-

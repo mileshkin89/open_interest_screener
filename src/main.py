@@ -18,13 +18,11 @@ from app_logic.default_settings import DEFAULT_EXCHANGES
 from bot.bot_init import bot_, dp
 from bot.menu import set_commands
 from db.connection import create_pool
-from db.bot_users_pg import init_user_table
-from db.history_data import init_timescale_table, enable_retention_policy
+from db.repositories.bot_users_pg import init_user_table
+from db.repositories.history_data import init_timescale_table, enable_retention_policy
 from db.retention_worker import retention_worker
-from bot.commands import start, settings, exchanges
 from app_logic.user_activity import monitor_user_activity
 from app_logic.symbol_list_handler import symbol_list
-from app_logic import user_activity
 from data_collector.start_collector import start_collector_process
 from logging_config import get_logger
 

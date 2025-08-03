@@ -20,17 +20,17 @@ Requires:
 """
 
 import asyncio
-from datetime import datetime
 from typing import Callable
 from zoneinfo import ZoneInfo
 
 from app_logic.condition_handler import ConditionHandler
 from exchange_listeners.listener_manager import ListenerManager
-from db.hist_signal_db import init_db, trim_old_records
 from app_logic.default_settings import DEFAULT_SETTINGS, MIN_INTERVAL, SLEEP_TIMER_SECOND
 from exchange_listeners.exchange_urls import create_link
 from app_logic.symbol_list_handler import symbol_list
 from logging_config import get_logger
+
+from db.repositories.bot_users_pg import get_user_settings
 
 logger = get_logger(__name__)
 
@@ -83,27 +83,8 @@ class Scanner:
         Raises:
             Exception: Logs errors if fetching data, cleaning DB, or processing conditions fails.
         """
-        # to avoid circular import
-        from db.bot_users import get_user_settings
 
-        await init_db()
         while True:
-
-            now = datetime.now().date()
-
-            # Executed once a day:
-            if now != self.last_day:
-                self.symbols_by_exchange.clear()
-
-                # Removing history older than a day
-                now_timestamp = int(datetime.now().timestamp())
-                try:
-                    await trim_old_records("history_temp", now_timestamp)
-                except Exception as e:
-                    logger.error(f"Database cleanup error: {e}", exc_info=True)
-
-                self.last_day = now
-
 
             # Retrieve the list of symbols from the user's active exchanges
             for exchange in self.manager.get_all_active_listeners():

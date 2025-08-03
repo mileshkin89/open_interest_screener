@@ -12,7 +12,7 @@ Includes:
 from aiogram import F, Router
 from aiogram.types import Message, CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton
 from app_logic.user_activity import mark_user_active
-from db.bot_users import get_user_settings, update_user_settings
+from db.repositories.bot_users_pg import get_user_settings, update_user_settings
 from bot.msg_sender import notify
 
 

@@ -2,7 +2,11 @@
 # docker-compose -f docker-compose-prod.yml down
 # docker-compose -f docker-compose-prod.yml down -v
 # docker-compose -f docker-compose-prod.yml up
+
+version: '3.8'
+
 services:
+
   bot:
     restart: always
     image: ___template___
@@ -18,11 +22,32 @@ services:
       - logs_data:/usr/src/logs
     networks:
       - bot_network
+    depends_on:
+      - postgres_db
+
+
+  postgres_db:
+    image: timescale/timescaledb:2.14.2-pg15
+    container_name: oi-postgres
+    restart: always
+    environment:
+      POSTGRES_DB: screener_db
+      POSTGRES_USER: screener_user
+      POSTGRES_PASSWORD: screener_pass
+    ports:
+      - "5432:5432"
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    networks:
+      - bot_network
+
 
 volumes:
   storage_data:
     driver: local
   logs_data:
+    driver: local
+  pg_data:
     driver: local
 
 networks:

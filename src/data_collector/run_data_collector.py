@@ -16,51 +16,52 @@ import asyncio
 import aiohttp
 import json
 from datetime import datetime
-from pathlib import Path
 
+from db.connection import create_pool
+from db.repositories.history_data import write_oi_to_db, write_ohlcv_to_db
 from exchange_listeners.listener_manager import ListenerManager
 from app_logic.default_settings import SLEEP_DATA_COLLECTOR
 from config import config
-import logging
+# import logging
+from logging_config import get_logger
+
+logger = get_logger(__name__)
 
 
-OI_STORAGE_DIR = config.STORE_SYMBOLS_PATH
-
-
-def configure_logger(exchange: str):
-    """
-    Configures a dedicated logger for a specific exchange.
-
-    The logger writes logs to a file named `collector_<exchange>.log`,
-    located in the logs directory defined in the config.
-
-    Args:
-        exchange (str): Name of the exchange (e.g., 'binance').
-
-    Returns:
-        logging.Logger: Configured logger instance for the exchange.
-    """
-    logs_dir = config.LOG_PATH.parent
-    logs_dir.mkdir(exist_ok=True)
-    print("logs_dir = ", logs_dir)
-
-    log_file = logs_dir / f"collector_{exchange}.log"
-    print("log_file = ", log_file)
-
-    logger = logging.getLogger(f"collector_{exchange}")
-    logger.setLevel(logging.INFO)
-
-    file_handler = logging.FileHandler(log_file, mode='a', encoding='utf-8')
-    formatter = logging.Formatter(
-        fmt='%(asctime)s - %(levelname)s - %(message)s',
-        datefmt='%Y-%m-%d %H:%M:%S'
-    )
-    file_handler.setFormatter(formatter)
-    logger.addHandler(file_handler)
-
-    logger.propagate = False
-
-    return logger
+# def configure_logger(exchange: str):
+#     """
+#     Configures a dedicated logger for a specific exchange.
+#
+#     The logger writes logs to a file named `collector_<exchange>.log`,
+#     located in the logs directory defined in the config.
+#
+#     Args:
+#         exchange (str): Name of the exchange (e.g., 'binance').
+#
+#     Returns:
+#         logging.Logger: Configured logger instance for the exchange.
+#     """
+#     logs_dir = config.LOG_PATH.parent
+#     logs_dir.mkdir(exist_ok=True)
+#     print("logs_dir = ", logs_dir)
+#
+#     log_file = logs_dir / f"collector_{exchange}.log"
+#     print("log_file = ", log_file)
+#
+#     logger = logging.getLogger(f"collector_{exchange}")
+#     logger.setLevel(logging.INFO)
+#
+#     file_handler = logging.FileHandler(log_file, mode='a', encoding='utf-8')
+#     formatter = logging.Formatter(
+#         fmt='%(asctime)s - %(levelname)s - %(message)s',
+#         datefmt='%Y-%m-%d %H:%M:%S'
+#     )
+#     file_handler.setFormatter(formatter)
+#     logger.addHandler(file_handler)
+#
+#     logger.propagate = False
+#
+#     return logger
 
 
 async def get_symbols_list(exchange: str):
@@ -82,25 +83,6 @@ async def get_symbols_list(exchange: str):
         with symbols_file.open("r", encoding="utf-8") as f:
             symbols = json.load(f)
             return symbols
-
-
-async def save_data_to_file(data: list[dict], exchange: str):
-    """
-    Saves collected data to a timestamped JSON file for the given exchange.
-
-    The file is stored in the configured OI_STORAGE_DIR and named with the current date and time.
-
-    Args:
-        data (list[dict]): List of collected Open Interest and OHLCV data.
-        exchange (str): Exchange name (e.g., 'binance').
-    """
-    now = datetime.now()
-    filename = f"{exchange}_data_{now.strftime('%Y%m%d_%H%M')}.json"
-    path = Path(OI_STORAGE_DIR)
-    path.mkdir(parents=True, exist_ok=True)
-    with open(path / filename, "w", encoding="utf-8") as f:
-        json.dump(data, f, indent=2)
-    logger.info(f"Saved {len(data)} records to {filename}")
 
 
 async def fetch_data(symbols: list, callback) -> list:
@@ -145,32 +127,25 @@ async def data_collect(exchange: str):
     manager = ListenerManager(enabled_exchanges=[exchange])
     listener = manager.get_listener(exchange)
 
+    pool = await create_pool()
+
     if not listener:
         logger.error(f"No listener for exchange {exchange}")
         return
 
     while True:
         now = datetime.now().second
-        print(now)
 
         if now == 59:
-            results = []
             try:
                 symbols = await get_symbols_list(exchange)
 
                 oi_data = await fetch_data(symbols, listener.fetch_oi)
-                print(f"[data_collect] oi_data = {oi_data}")
+                await write_oi_to_db(pool, oi_data)
 
-                await asyncio.sleep(1)
+                # await asyncio.sleep(1)
                 ohlcv = await fetch_data(symbols, listener.fetch_ohlcv)
-                print(f"[data_collect] ohlcv = {ohlcv}")
-
-                if oi_data and ohlcv:
-                    results.extend(oi_data)
-                    results.extend(ohlcv)
-
-                await save_data_to_file(results, exchange)
-
+                await write_ohlcv_to_db(pool, ohlcv)
             except Exception as e:
                 logger.error(f"Error collecting OI from {exchange}: {e}", exc_info=True)
 
@@ -188,7 +163,7 @@ def run_collector(exchange: str):
     Args:
         exchange (str): Exchange name (e.g., 'binance').
     """
-    global logger
-    logger = configure_logger(exchange)
+    # global logger
+    # logger = configure_logger(exchange)
     asyncio.run(data_collect(exchange))
 

@@ -2,6 +2,11 @@
 
 from psycopg_pool import AsyncConnectionPool
 from psycopg import errors
+from logging_config import get_logger
+
+logger = get_logger(__name__)
+
+
 
 CREATE_HISTORY_TABLE = """
 CREATE TABLE IF NOT EXISTS history_data (
@@ -45,28 +50,43 @@ async def enable_retention_policy(pool: AsyncConnectionPool):
                 pass
 
 
+def _filter_valid_keys(data: list[dict], required_keys: set[str]) -> list[dict]:
+    return [d for d in data if required_keys.issubset(d)]
+
 async def write_oi_to_db(pool: AsyncConnectionPool, data: list[dict]):
     if not data:
         return
 
+    required_keys = {"symbol", "exchange", "timestamp", "open_interest"}
+    data = _filter_valid_keys(data, required_keys)
+
     async with pool.connection() as conn:
-        await conn.executemany("""
-            INSERT INTO history_data (symbol, exchange, timestamp, open_interest)
-            VALUES (%(symbol)s, %(exchange)s, %(timestamp)s, %(open_interest)s)
-        """, data)
+        async with conn.cursor() as cur:
+            await cur.executemany("""
+                INSERT INTO history_data (symbol, exchange, timestamp, open_interest)
+                VALUES (%(symbol)s, %(exchange)s, %(timestamp)s, %(open_interest)s)
+                ON CONFLICT (symbol, exchange, timestamp) DO NOTHING
+            """, data)
         await conn.commit()
+    logger.info(f"Wrote {len(data)} OI rows to history_data table.")
 
 
 async def write_ohlcv_to_db(pool: AsyncConnectionPool, data: list[dict]):
     if not data:
         return
 
+    required_keys = {"symbol", "exchange", "timestamp", "open", "high", "low", "close", "volume"}
+    data = _filter_valid_keys(data, required_keys)
+
     async with pool.connection() as conn:
-        await conn.executemany("""
-            INSERT INTO history_data (symbol, exchange, timestamp, open, high, low, close, volume)
-            VALUES (%(symbol)s, %(exchange)s, %(timestamp)s, %(open)s, %(high)s, %(low)s, %(close)s, %(volume)s)
-        """, data)
+        async with conn.cursor() as cur:
+            await cur.executemany("""
+                INSERT INTO history_data (symbol, exchange, timestamp, open, high, low, close, volume)
+                VALUES (%(symbol)s, %(exchange)s, %(timestamp)s, %(open)s, %(high)s, %(low)s, %(close)s, %(volume)s)
+                ON CONFLICT (symbol, exchange, timestamp) DO NOTHING
+            """, data)
         await conn.commit()
+    logger.info(f"Wrote {len(data)} OHLCV rows to history_data table.")
 
 
 async def get_historical_oi(pool: AsyncConnectionPool, symbol: str, exchange: str, before_date: int) -> list[dict]:

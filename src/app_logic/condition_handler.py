@@ -25,7 +25,8 @@ import aiohttp
 from datetime import datetime
 from exchange_listeners.api_listeners.base_listener import BaseExchangeListener
 from app_logic.default_settings import DEFAULT_SETTINGS, MIN_INTERVAL
-from db.hist_signal_db import add_history_in_db, get_historical_oi
+from db.repositories.history_data import get_historical_oi
+from db.connection import create_pool
 from logging_config import get_logger
 
 logger = get_logger(__name__)
@@ -183,11 +184,6 @@ class ConditionHandler:
         symbol = coin[0].get('symbol', 'unknown')
         exchange_name = coin[0].get('exchange', 'unknown')
 
-        try:
-            await add_history_in_db(symbol, exchange_name, coin[0]['timestamp'], coin[0]['open_interest'])
-        except Exception as e:
-            logger.error(f"Error saving history to database: {e}", exc_info=True)
-
         for i in range(1, len(coin)):
             delta_oi = self.delta_calculate(coin[0]['open_interest'], coin[i]['open_interest'])
             if delta_oi is None or delta_oi <= self.threshold:
@@ -282,8 +278,9 @@ class ConditionHandler:
         """
         _count_signal = 0
         _delta_oi = 0
+        pool = await create_pool()
 
-        history_io = await get_historical_oi(symbol, exchange_name, before_date)
+        history_io = await get_historical_oi(pool, symbol, exchange_name, before_date)
         if not history_io:
             return 0
 

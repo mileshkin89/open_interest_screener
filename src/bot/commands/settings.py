@@ -21,7 +21,7 @@ from zoneinfo import ZoneInfo
 
 from bot.keyboards import settings_menu
 from bot.states import ScreenerSettings
-from db.bot_users import get_user_settings, update_user_settings
+from db.repositories.bot_users_pg import get_user_settings, update_user_settings
 from app_logic.default_settings import DEFAULT_SETTINGS, POPULAR_TIMEZONES_BY_OFFSET
 from app_logic.user_activity import mark_user_active
 from logging_config import get_logger

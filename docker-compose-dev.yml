@@ -1,6 +1,9 @@
 # docker-compose -f docker-compose-dev.yml up --build
 # docker-compose -f docker-compose-dev.yml down
 # docker-compose -f docker-compose-dev.yml up
+
+version: '3.8'
+
 services:
   bot:
     restart: always
@@ -14,10 +17,30 @@ services:
       - PYTHONPATH=/usr
     volumes:
       - ./src:/usr/src
-      - ./storage:/usr/src/storage
       - ./logs:/usr/src/logs
     networks:
       - bot_network
+    depends_on:
+      - postgres_db
+
+  postgres_db:
+    image: timescale/timescaledb:2.14.2-pg15
+    container_name: oi-postgres
+    restart: always
+    environment:
+      POSTGRES_DB: screener_db
+      POSTGRES_USER: screener_user
+      POSTGRES_PASSWORD: screener_pass
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./db/init:/docker-entrypoint-initdb.d
+      - pg_data:/var/lib/postgresql/data
+    networks:
+      - bot_network
+
+volumes:
+  pg_data:
 
 networks:
   bot_network:

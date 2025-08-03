@@ -125,7 +125,9 @@ class BinanceListener(BaseExchangeListener):
             if close_session:
                 await session.close()
 
+        #logger.info(result)
         return result
+
 
     async def fetch_ohlcv(self, symbol: str, session: aiohttp.ClientSession) -> dict | None:
         """
@@ -174,7 +176,7 @@ class BinanceListener(BaseExchangeListener):
                 timestamp = candle[0]
                 dt = datetime.fromtimestamp(timestamp / 1000, tz=timezone.utc)
 
-                return {
+                result = {
                     "exchange": "binance",
                     "symbol": symbol,
                     "timestamp": dt,
@@ -184,6 +186,9 @@ class BinanceListener(BaseExchangeListener):
                     "close": float(candle[4]),
                     "volume": float(candle[5]),
                 }
+
+                #logger.info(result)
+                return result
 
         except (aiohttp.ClientError, asyncio.TimeoutError) as e:
             logger.error(f"Network error fetching OHLCV for {symbol}: {e}")

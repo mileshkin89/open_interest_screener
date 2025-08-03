@@ -17,6 +17,6 @@ async def create_pool() -> AsyncConnectionPool:
     return _pool
 
 # --usage--
-# from connection import create_pool
+# from db.connection import create_pool
 # async def some_function():
 #     pool = await create_pool()
