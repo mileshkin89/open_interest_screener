@@ -1,4 +1,4 @@
-# docker-compose -f docker-compose-dev.yml up --build
+# docker-compose -f docker-compose-dev.yml up --build -d
 # docker-compose -f docker-compose-dev.yml down
 # docker-compose -f docker-compose-dev.yml up
 
@@ -6,7 +6,6 @@ version: '3.8'
 
 services:
   bot:
-    restart: always
     build: .
     container_name: oi-screener
     command: [ "python", "main.py" ]
@@ -16,12 +15,14 @@ services:
       - LOG_LEVEL=debug
       - PYTHONPATH=/usr
     volumes:
-      - ./src:/usr/src
-      - ./logs:/usr/src/logs
+      - storage_data:/usr/src/storage
+      - logs_data:/usr/src/logs
+      - symbols:/usr/src/symbols
     networks:
       - bot_network
     depends_on:
-      - postgres_db
+      postgres_db:
+        condition: service_healthy
 
   postgres_db:
     image: timescale/timescaledb:2.14.2-pg15
@@ -34,12 +35,20 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - ./db/init:/docker-entrypoint-initdb.d
       - pg_data:/var/lib/postgresql/data
     networks:
       - bot_network
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB} -h 127.0.0.1 || exit 1" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
 
 volumes:
+  storage_data:
+  logs_data:
+  symbols:
   pg_data:
 
 networks:
