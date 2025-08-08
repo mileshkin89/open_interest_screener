@@ -17,7 +17,8 @@ Integrates with:
 from aiogram import F, Router
 from aiogram.types import Message, CallbackQuery
 from bot.keyboards import start_menu
-from db.repositories.user_settings import get_user_settings, update_user_settings
+from db.repo_factory import get_user_settings_repo
+from db.repositories.user_settings import UserSettingsRepository
 from app_logic.scanner.scanner_manager import start_or_restart_scanner, stop_scanner
 from app_logic.user_activity import mark_user_active
 from settings.default_settings import DEFAULT_SETTINGS, DEFAULT_EXCHANGES, DEFAULT_TIME_ZONE
@@ -115,13 +116,14 @@ async def start_scan(target):
     user_id = target.from_user.id
     mark_user_active(user_id)
 
-    settings = await get_user_settings(user_id)
+    user_repo: UserSettingsRepository = await get_user_settings_repo()
+    settings = await user_repo.get_user_settings(user_id)
 
     if settings is None:
         settings = DEFAULT_SETTINGS.copy()
         settings["active_exchanges"] = DEFAULT_EXCHANGES.copy()
         settings["time_zone"] = DEFAULT_TIME_ZONE
-        await update_user_settings(user_id, **settings)
+        await user_repo.update_user_settings(user_id, **settings)
     else:
         if "period" not in settings:
             settings["period"] = DEFAULT_SETTINGS["period"]

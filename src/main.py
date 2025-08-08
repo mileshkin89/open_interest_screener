@@ -15,12 +15,14 @@ Designed for asynchronous execution using asyncio.
 import asyncio
 
 from settings.default_settings import DEFAULT_EXCHANGES
-from bot.bot_init import bot_, dp
+from bot.bot_init import bot, dp
 from bot.menu import set_commands
+from bot.commands import start, settings, exchanges
 from db.repo_factory import get_user_settings_repo, get_history_repo
 from db.repositories.user_settings import UserSettingsRepository
 from db.repositories.history_data import HistoryDataRepository
 from db.retention_worker import retention_worker
+from app_logic import user_activity
 from app_logic.user_activity import monitor_user_activity
 from app_logic.symbol_list_handler import symbol_list
 from data_collector.start_collector import start_collector_process
@@ -57,22 +59,23 @@ async def main():
     asyncio.create_task(monitor_user_activity())
     logger.info("Started user activity monitor task.")
 
+    logger.info("Started data collectors:")
     for exchange in DEFAULT_EXCHANGES:
         start_collector_process(exchange)
 
 
     await set_commands()
-    # dp.include_router(start.router)
-    # dp.include_router(settings.router)
-    # dp.include_router(exchanges.router)
-    # dp.include_router(user_activity.router)
-    # logger.info("Started bot commands.")
+    dp.include_router(start.router)
+    dp.include_router(settings.router)
+    dp.include_router(exchanges.router)
+    dp.include_router(user_activity.router)
+    logger.info("Started bot commands.")
 
 
     # Start polling the Telegram API
-    await bot_.delete_webhook(drop_pending_updates=True)
+    await bot.delete_webhook(drop_pending_updates=True)
     logger.info("Bot started successfully.")
-    await dp.start_polling(bot_)
+    await dp.start_polling(bot)
 
 
 

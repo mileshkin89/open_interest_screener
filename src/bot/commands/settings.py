@@ -21,7 +21,8 @@ from zoneinfo import ZoneInfo
 
 from bot.keyboards import settings_menu
 from bot.states import ScreenerSettings
-from db.repositories.user_settings import get_user_settings, update_user_settings
+from db.repo_factory import get_user_settings_repo
+from db.repositories.user_settings import UserSettingsRepository
 from settings.default_settings import DEFAULT_SETTINGS, POPULAR_TIMEZONES_BY_OFFSET
 from app_logic.user_activity import mark_user_active
 from settings.logging_config import get_logger
@@ -131,8 +132,9 @@ async def  process_time_zone(callback: CallbackQuery, state: FSMContext):
     user_id = callback.from_user.id
 
     dt = datetime.now(ZoneInfo(time_zone))
+    user_repo: UserSettingsRepository = await get_user_settings_repo()
 
-    await update_user_settings(user_id, time_zone=time_zone)
+    await user_repo.update_user_settings(user_id, time_zone=time_zone)
     await state.clear()
     await callback.message.answer(
         f"You chose: \"{time_zone}\"\nYour current time - {dt.strftime('%H:%M:%S')}\nPress /run to start")
@@ -180,10 +182,12 @@ async def process_period(message: Message, state: FSMContext):
 
         user_id = message.from_user.id
 
-        existing = await get_user_settings(user_id)
+        user_repo: UserSettingsRepository = await get_user_settings_repo()
+
+        existing = await user_repo.get_user_settings(user_id)
         threshold = existing["threshold"] if existing else DEFAULT_SETTINGS["threshold"]
 
-        await update_user_settings(user_id, period=period, threshold=threshold)
+        await user_repo.update_user_settings(user_id, period=period, threshold=threshold)
 
         await message.answer(f"✅ The period is set: {period} minutes.\nPress /run to start")
         await state.clear()
@@ -236,10 +240,12 @@ async def process_threshold(message: Message, state: FSMContext):
 
         user_id = message.from_user.id
 
-        existing = await get_user_settings(user_id)
+        user_repo: UserSettingsRepository = await get_user_settings_repo()
+
+        existing = await user_repo.get_user_settings(user_id)
         period = existing["period"] if existing else DEFAULT_SETTINGS["period"]
 
-        await update_user_settings(user_id, period=period, threshold=threshold)
+        await user_repo.update_user_settings(user_id, period=period, threshold=threshold)
 
         await message.answer(f"✅ Growth threshold set: {threshold * 100:.2f}%\nPress /run to start")
         await state.clear()

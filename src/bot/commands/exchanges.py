@@ -12,7 +12,8 @@ Includes:
 from aiogram import F, Router
 from aiogram.types import Message, CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton
 from app_logic.user_activity import mark_user_active
-from db.repositories.user_settings import get_user_settings, update_user_settings
+from db.repo_factory import get_user_settings_repo
+from db.repositories.user_settings import UserSettingsRepository
 from bot.msg_sender import notify
 
 
@@ -38,7 +39,9 @@ async def show_exchanges_menu(target: Message | CallbackQuery):
     user_id = target.from_user.id
     mark_user_active(user_id)
 
-    settings = await get_user_settings(user_id)
+    user_repo: UserSettingsRepository = await get_user_settings_repo()
+
+    settings = await user_repo.get_user_settings(user_id)
 
     active_exchanges = settings.get("active_exchanges", [])
     keyboard = generate_exchange_keyboard(active_exchanges)
@@ -72,7 +75,10 @@ async def toggle_exchange(callback: CallbackQuery):
     """
     user_id = callback.from_user.id
     mark_user_active(user_id)
-    settings = await get_user_settings(user_id)
+
+    user_repo: UserSettingsRepository = await get_user_settings_repo()
+
+    settings = await user_repo.get_user_settings(user_id)
     active = set(settings["active_exchanges"])
     exchange = callback.data.split("_")[0]
 
@@ -83,7 +89,7 @@ async def toggle_exchange(callback: CallbackQuery):
         active.add(exchange)
         status = f"✅ Exchange {exchange.capitalize()} activated"
 
-    await update_user_settings(user_id, active_exchanges=list(active))
+    await user_repo.update_user_settings(user_id, active_exchanges=list(active))
     await callback.answer(status, show_alert=True)
     await callback.message.edit_reply_markup(reply_markup=generate_exchange_keyboard(active))
 

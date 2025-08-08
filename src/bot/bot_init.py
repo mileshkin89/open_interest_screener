@@ -26,7 +26,7 @@ from settings.config import config
 dp = Dispatcher(storage=MemoryStorage())
 
 # Bot instance configured with token and default parse mode (HTML formatting for messages).
-bot_ = Bot(
+bot = Bot(
     token=config.TG_BOT_API_KEY,
     default=DefaultBotProperties(parse_mode=ParseMode.HTML)
 )
