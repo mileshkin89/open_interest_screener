@@ -15,9 +15,9 @@ control over when and how retention is applied (e.g., in a containerized app).
 
 import asyncio
 from psycopg_pool import AsyncConnectionPool
-from app_logic.default_settings import DEFAULT_EXCHANGES
+from settings.default_settings import DEFAULT_EXCHANGES
 from db.repo_factory import create_pool
-from logging_config import get_logger
+from settings.logging_config import get_logger
 
 logger = get_logger(__name__)
 

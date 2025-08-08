@@ -14,7 +14,7 @@ Designed for asynchronous execution using asyncio.
 """
 import asyncio
 
-from app_logic.default_settings import DEFAULT_EXCHANGES
+from settings.default_settings import DEFAULT_EXCHANGES
 from bot.bot_init import bot_, dp
 from bot.menu import set_commands
 from db.repo_factory import get_user_settings_repo, get_history_repo
@@ -24,7 +24,7 @@ from db.retention_worker import retention_worker
 from app_logic.user_activity import monitor_user_activity
 from app_logic.symbol_list_handler import symbol_list
 from data_collector.start_collector import start_collector_process
-from logging_config import get_logger
+from settings.logging_config import get_logger
 
 logger = get_logger(__name__)
 

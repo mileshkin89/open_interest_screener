@@ -21,9 +21,9 @@ from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram import Router, F
 from aiogram.types import CallbackQuery
 from bot.msg_sender import notify
-from app_logic.default_settings import INACTIVITY_DAYS, WAITING_DAYS
+from settings.default_settings import INACTIVITY_DAYS, WAITING_DAYS
 from app_logic.scanner.scanner_manager import running_scanners
-from logging_config import get_logger
+from settings.logging_config import get_logger
 
 logger = get_logger(__name__)
 

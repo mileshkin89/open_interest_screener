@@ -27,7 +27,7 @@ async def handle_user_command(user_id: int):
 from typing import Optional
 from psycopg_pool import AsyncConnectionPool
 
-from config import config
+from settings.config import config
 from db.repositories.user_settings import UserSettingsRepository
 from db.repositories.history_data import HistoryDataRepository
 

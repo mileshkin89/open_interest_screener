@@ -10,7 +10,7 @@ services:
     container_name: oi-screener
     command: [ "python", "main.py" ]
     env_file:
-      - .env
+      - src/.env
     environment:
       - LOG_LEVEL=debug
       - PYTHONPATH=/usr

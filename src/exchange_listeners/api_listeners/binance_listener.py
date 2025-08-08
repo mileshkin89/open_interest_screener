@@ -16,7 +16,7 @@ import aiohttp
 import asyncio
 from datetime import datetime, timezone
 from exchange_listeners.api_listeners.base_listener import BaseExchangeListener
-from logging_config import get_logger
+from settings.logging_config import get_logger
 
 logger = get_logger(__name__)
 

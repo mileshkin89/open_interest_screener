@@ -9,7 +9,7 @@ active listeners, all listeners, or specific ones based on the enabled exchanges
 from exchange_listeners.api_listeners.binance_listener import BinanceListener
 from exchange_listeners.api_listeners.bybit_listener import BybitListener
 from typing import Any
-from logging_config import get_logger
+from settings.logging_config import get_logger
 
 logger = get_logger(__name__)
 

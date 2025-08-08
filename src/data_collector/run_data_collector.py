@@ -20,10 +20,10 @@ from datetime import datetime
 from db.repo_factory import get_history_repo
 from db.repositories.history_data import HistoryDataRepository
 from exchange_listeners.listener_manager import ListenerManager
-from app_logic.default_settings import SLEEP_DATA_COLLECTOR
-from config import config
+from settings.default_settings import SLEEP_DATA_COLLECTOR
+from settings.config import config
 # import logging
-from logging_config import get_logger
+from settings.logging_config import get_logger
 
 logger = get_logger(__name__)
 

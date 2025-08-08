@@ -20,7 +20,7 @@ from bot.keyboards import start_menu
 from db.repositories.user_settings import get_user_settings, update_user_settings
 from app_logic.scanner.scanner_manager import start_or_restart_scanner, stop_scanner
 from app_logic.user_activity import mark_user_active
-from app_logic.default_settings import DEFAULT_SETTINGS, DEFAULT_EXCHANGES, DEFAULT_TIME_ZONE
+from settings.default_settings import DEFAULT_SETTINGS, DEFAULT_EXCHANGES, DEFAULT_TIME_ZONE
 from bot.commands.settings import show_settings_menu
 from bot.commands.exchanges import show_exchanges_menu
 from bot.msg_sender import notify

@@ -27,10 +27,10 @@ from db.repo_factory import get_user_settings_repo
 from db.repositories.user_settings import UserSettingsRepository
 from app_logic.condition_handler import ConditionHandler
 from exchange_listeners.listener_manager import ListenerManager
-from app_logic.default_settings import DEFAULT_SETTINGS, MIN_INTERVAL, SLEEP_TIMER_SECOND
+from settings.default_settings import DEFAULT_SETTINGS, MIN_INTERVAL, SLEEP_TIMER_SECOND
 from exchange_listeners.exchange_urls import create_link
 from app_logic.symbol_list_handler import symbol_list
-from logging_config import get_logger
+from settings.logging_config import get_logger
 
 
 logger = get_logger(__name__)

@@ -24,10 +24,10 @@ import asyncio
 import aiohttp
 from datetime import datetime
 from exchange_listeners.api_listeners.base_listener import BaseExchangeListener
-from app_logic.default_settings import DEFAULT_SETTINGS, MIN_INTERVAL
+from settings.default_settings import DEFAULT_SETTINGS, MIN_INTERVAL
 from db.repo_factory import get_history_repo
 from db.repositories.history_data import HistoryDataRepository
-from logging_config import get_logger
+from settings.logging_config import get_logger
 
 logger = get_logger(__name__)
 

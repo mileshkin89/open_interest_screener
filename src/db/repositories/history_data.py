@@ -1,7 +1,7 @@
 from psycopg_pool import AsyncConnectionPool
 from psycopg import errors
-from app_logic.default_settings import DEFAULT_EXCHANGES
-from logging_config import get_logger
+from settings.default_settings import DEFAULT_EXCHANGES
+from settings.logging_config import get_logger
 
 logger = get_logger(__name__)
 

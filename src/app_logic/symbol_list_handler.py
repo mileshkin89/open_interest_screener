@@ -11,10 +11,10 @@ at a defined time every minute, and stores them in memory for access by other co
 import asyncio
 from datetime import datetime
 import json
-from config import config
-from app_logic.default_settings import DEFAULT_EXCHANGES, START_FETCH_SYMBOLS_SECOND, SLEEP_FETCH_SYMBOLS_SECOND
+from settings.config import config
+from settings.default_settings import DEFAULT_EXCHANGES, START_FETCH_SYMBOLS_SECOND, SLEEP_FETCH_SYMBOLS_SECOND
 from exchange_listeners.listener_manager import ListenerManager
-from logging_config import get_logger
+from settings.logging_config import get_logger
 
 logger = get_logger(__name__)
 

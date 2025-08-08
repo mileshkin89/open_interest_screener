@@ -28,7 +28,7 @@ from typing import Callable
 from exchange_listeners.listener_manager import ListenerManager
 from app_logic.condition_handler import ConditionHandler
 from .scanner import Scanner
-from logging_config import get_logger
+from settings.logging_config import get_logger
 
 logger = get_logger(__name__)
 

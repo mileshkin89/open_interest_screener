@@ -2,7 +2,7 @@
 
 import json
 from psycopg_pool import AsyncConnectionPool
-from app_logic.default_settings import DEFAULT_SETTINGS, DEFAULT_EXCHANGES, DEFAULT_TIME_ZONE
+from settings.default_settings import DEFAULT_SETTINGS, DEFAULT_EXCHANGES, DEFAULT_TIME_ZONE
 
 
 class UserSettingsRepository:

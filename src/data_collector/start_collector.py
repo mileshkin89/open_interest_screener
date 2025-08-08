@@ -12,7 +12,7 @@ Typical usage:
 
 from multiprocessing import Process
 from data_collector.run_data_collector import run_collector
-from logging_config import get_logger
+from settings.logging_config import get_logger
 
 logger = get_logger(__name__)
 

@@ -15,8 +15,8 @@ import aiohttp
 import asyncio
 from datetime import datetime
 from exchange_listeners.api_listeners.base_listener import BaseExchangeListener
-from app_logic.default_settings import MIN_INTERVAL
-from logging_config import get_logger
+from settings.default_settings import MIN_INTERVAL
+from settings.logging_config import get_logger
 
 logger = get_logger(__name__)
 

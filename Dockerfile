@@ -13,8 +13,8 @@ RUN python -m pip install --upgrade pip && \
     pip install poetry
 
 # Copy dependency descriptors
-COPY ./poetry.lock /usr/src/poetry/poetry.lock
-COPY ./pyproject.toml /usr/src/poetry/pyproject.toml
+COPY src/poetry.lock /usr/src/poetry/poetry.lock
+COPY src/pyproject.toml /usr/src/poetry/pyproject.toml
 
 # Set working directory for dependency install
 WORKDIR /usr/src/poetry
