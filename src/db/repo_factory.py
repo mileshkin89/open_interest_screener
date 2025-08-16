@@ -30,11 +30,13 @@ from psycopg_pool import AsyncConnectionPool
 from settings.config import config
 from db.repositories.user_settings import UserSettingsRepository
 from db.repositories.history_data import HistoryDataRepository
+from db.repositories.signal import SignalRepository
 
 
 _pool: Optional[AsyncConnectionPool] = None
 _user_settings_repo: Optional[UserSettingsRepository] = None
 _history_repo: Optional[HistoryDataRepository] = None
+_signal_repo: Optional[SignalRepository] = None
 
 
 async def create_pool() -> AsyncConnectionPool:
@@ -54,7 +56,11 @@ async def create_pool() -> AsyncConnectionPool:
     """
     global _pool
     if _pool is None:
-        _pool = AsyncConnectionPool(config.DATABASE_URL)
+        _pool = AsyncConnectionPool(
+            config.DATABASE_URL,
+            max_size=20,
+            kwargs={"prepare_threshold": None},
+        )
         await _pool.open()
     if not _pool.open:
         await _pool.open()
@@ -103,3 +109,11 @@ async def get_history_repo() -> HistoryDataRepository:
         pool = await create_pool()
         _history_repo = HistoryDataRepository(pool)
     return _history_repo
+
+
+async def get_signal_repo() -> SignalRepository:
+    global _signal_repo
+    if _signal_repo is None:
+        pool = await create_pool()
+        _signal_repo = SignalRepository(pool)
+    return _signal_repo

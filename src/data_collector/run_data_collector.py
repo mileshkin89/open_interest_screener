@@ -146,7 +146,7 @@ async def data_collect(exchange: str):
                 oi_data = await fetch_data(symbols, listener.fetch_oi)
                 await history_repo.write_oi(oi_data, exchange)
 
-                # await asyncio.sleep(1)
+                #await asyncio.sleep(1)
                 ohlcv = await fetch_data(symbols, listener.fetch_ohlcv)
                 await history_repo.write_ohlcv(ohlcv, exchange)
             except Exception as e:
