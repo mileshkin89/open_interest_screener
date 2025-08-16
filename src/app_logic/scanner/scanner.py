@@ -103,7 +103,7 @@ class Scanner:
 
                 # Getting a list of cryptocurrencies for which a condition is met on a specific exchange
                 try:
-                    signal_coins = await self.handler.is_signal(symbols, threshold_period, MIN_INTERVAL, threshold)
+                    signal_coins = await self.handler.is_signal(exchange_name, symbols, threshold_period, threshold)
 
                     user_repo: UserSettingsRepository = await get_user_settings_repo()
 

@@ -29,14 +29,12 @@ class BaseExchangeListener(ABC):
 
 
     @abstractmethod
-    async def fetch_oi(self, symbol: str, interval: str, limit: int, session: aiohttp.ClientSession) -> list[dict]:
+    async def fetch_oi(self, symbol: str, session: aiohttp.ClientSession) -> list[dict]:
         """
         Fetches open interest data for a given symbol.
 
         Args:
             symbol (str): Trading symbol (e.g., "BTCUSDT").
-            interval (str): Timeframe for the data (e.g., "5m", "15m").
-            limit (int): Number of data points to retrieve.
             session (aiohttp.ClientSession): An aiohttp session for making HTTP requests.
 
         Returns:
@@ -45,7 +43,7 @@ class BaseExchangeListener(ABC):
         pass
 
     @abstractmethod
-    async def fetch_ohlcv(self, symbol: str, start_date: int, end_date: int, interval: str, session: aiohttp.ClientSession) -> list[dict]:
+    async def fetch_ohlcv(self, symbol: str, session: aiohttp.ClientSession) -> list[dict]:
         """
         Fetches OHLCV data for a given symbol and time range.
 

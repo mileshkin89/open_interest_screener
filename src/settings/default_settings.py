@@ -62,6 +62,12 @@ SLEEP_TIMER_SECOND = 300
 """
 int: Default interval (in seconds) between scanner cycles or background checks (e.g., 5 minutes).
 """
+
+SLEEP_RETENTION_WORKER = 900
+"""
+int: Default interval (in seconds) between start retention_worker (e.g., 15 minutes).
+"""
+
 MIN_INTERVAL = "5"
 """
 str: Minimum timeframe (in minutes) used for Open Interest data requests to exchanges.

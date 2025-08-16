@@ -2,8 +2,6 @@
 # docker-compose -f docker-compose-dev.yml down
 # docker-compose -f docker-compose-dev.yml up
 
-version: '3.8'
-
 services:
   bot:
     build: .
@@ -25,7 +23,9 @@ services:
         condition: service_healthy
 
   postgres_db:
-    image: timescale/timescaledb:2.14.2-pg15
+    #image: timescale/timescaledb:2.21.3-pg15
+    #image: timescale/timescaledb:2.21.3-pg16
+    image: timescale/timescaledb:2.21.3-pg17
     container_name: oi-postgres
     restart: always
     environment:
