@@ -1,4 +1,5 @@
 from psycopg_pool import AsyncConnectionPool
+from psycopg.rows import dict_row
 from psycopg import errors
 from settings.default_settings import DEFAULT_EXCHANGES
 from settings.logging_config import get_logger
@@ -18,7 +19,7 @@ class HistoryDataRepository:
                 await conn.execute(
                     f"""
                     CREATE TABLE IF NOT EXISTS {exchange}_history_oi (
-                            symbol TEXT NOT NULL,
+                            symbol CHARACTER(50) NOT NULL,
                             timestamp TIMESTAMPTZ NOT NULL,
                             open_interest DOUBLE PRECISION,
                             PRIMARY KEY (symbol, timestamp)
@@ -33,7 +34,7 @@ class HistoryDataRepository:
                 await conn.execute(
                     f"""
                     CREATE TABLE IF NOT EXISTS {exchange}_history_ohlcv (
-                            symbol TEXT NOT NULL,
+                            symbol CHARACTER(50) NOT NULL,
                             timestamp TIMESTAMPTZ NOT NULL,
                             open DOUBLE PRECISION,
                             high DOUBLE PRECISION,
@@ -71,12 +72,15 @@ class HistoryDataRepository:
         return [d for d in data if required_keys.issubset(d)]
 
     async def write_oi(self, data: list[dict], exchange: str):
-
         if not data or not exchange:
             return
 
         required_keys = {"symbol", "timestamp", "open_interest"}
         data = self._filter_valid_keys(data, required_keys)
+
+        if not data:
+            logger.warning(f"write_oi `{exchange}_history_oi`: Missing required keys in data.")
+            return
 
         async with self.pool.connection() as conn:
             async with conn.cursor() as cur:
@@ -85,51 +89,70 @@ class HistoryDataRepository:
                     VALUES (%(symbol)s, %(timestamp)s, %(open_interest)s)
                     ON CONFLICT (symbol, timestamp) DO NOTHING
                 """, data)
-            await conn.commit()
-        logger.info(f"Wrote {len(data)} OI rows to `{exchange}_history_oi` table.")
+                await conn.commit()
+                logger.info(f"Wrote {len(data)} OI rows to `{exchange}_history_oi` table.")
 
 
     async def write_ohlcv(self, data: list[dict], exchange: str):
-
         if not data or not exchange:
             return
 
         required_keys = {"symbol", "timestamp", "open", "high", "low", "close", "volume"}
         data = self._filter_valid_keys(data, required_keys)
 
+        if not data:
+            logger.warning(f"write_ohlcv `{exchange}_history_ohlcv`: Missing required keys in data.")
+            return
+
         async with self.pool.connection() as conn:
             async with conn.cursor() as cur:
                 await cur.executemany(f"""
-                    INSERT INTO {exchange}_history_ohlcv (symbol, timestamp, open, high, low, close, volume)
+                    INSERT INTO {exchange}_history_ohlcv 
+                    (symbol, timestamp, open, high, low, close, volume)
                     VALUES (%(symbol)s, %(timestamp)s, %(open)s, %(high)s, %(low)s, %(close)s, %(volume)s)
                     ON CONFLICT (symbol, timestamp) DO NOTHING
                 """, data)
-            await conn.commit()
-        logger.info(f"Wrote {len(data)} OHLCV rows to `{exchange}_history_ohlcv` table.")
+                await conn.commit()
+                logger.info(f"Wrote {len(data)} OHLCV rows to `{exchange}_history_ohlcv` table.")
 
 
-    async def get_historical_oi(self, symbol: str, exchange: str, before_date: int) -> list[dict]:
-        """
-        Returns Open Interest history for the last 24 hours before a given timestamp.
 
-        Args:
-            symbol (str): Trading pair symbol.
-            exchange (str): Exchange name.
-            before_date (int): Upper bound for timestamp (in milliseconds).
 
-        Returns:
-            list[dict]: List of rows with timestamp and open_interest.
-        """
-        since_date = before_date - 24 * 60 * 60 * 1000  # 24 hours in ms
+    async def get_oi_by_period(self, exchange: str, symbol: str, before_date: int, period_in_minutes: int = 24 *60) -> list[dict]:
+
+        since_date = before_date - period_in_minutes * 60 * 1000
 
         async with self.pool.connection() as conn:
-            async with conn.execute(
-                f"""
-                SELECT timestamp, open_interest FROM {exchange}_history_oi
-                WHERE symbol = $1  AND timestamp <= $2 AND timestamp >= $3
-                ORDER BY timestamp DESC
-                """,
-                (symbol, before_date, since_date)
-            ) as cursor:
-                rows = await cursor.fetchall()
-                return [dict(row) for row in rows]
+            async with conn.cursor(row_factory=dict_row) as cur:
+                await cur.execute(
+                    f"""
+                    SELECT timestamp, open_interest
+                    FROM {exchange}_history_oi
+                    WHERE symbol = %s
+                    AND timestamp <= to_timestamp(%s)
+                    AND timestamp >= to_timestamp(%s)
+                    ORDER BY timestamp DESC
+                    """,
+                    (symbol, before_date / 1000.0, since_date / 1000.0)
+                )
+                rows = await cur.fetchall()
+                return rows
+
+
+    async def get_ohlcv_by_period(self, exchange: str, symbol: str, before_date: int, since_date: int) -> list[dict]:
+
+        async with self.pool.connection() as conn:
+            async with conn.cursor(row_factory=dict_row) as cur:
+                await cur.execute(
+                    f"""
+                    SELECT timestamp, close, volume
+                    FROM {exchange}_history_ohlcv
+                    WHERE symbol = %s
+                    AND timestamp <= to_timestamp(%s)
+                    AND timestamp >= to_timestamp(%s)
+                    ORDER BY timestamp DESC
+                    """,
+                    (symbol, before_date / 1000.0, since_date / 1000.0)
+                )
+                rows = await cur.fetchall()
+                return rows
