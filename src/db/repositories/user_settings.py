@@ -3,6 +3,9 @@
 import json
 from psycopg_pool import AsyncConnectionPool
 from settings.default_settings import DEFAULT_SETTINGS, DEFAULT_EXCHANGES, DEFAULT_TIME_ZONE
+from settings.logging_config import get_logger
+
+logger = get_logger(__name__)
 
 
 class UserSettingsRepository:
@@ -10,8 +13,8 @@ class UserSettingsRepository:
     CREATE TABLE IF NOT EXISTS user_settings (
         user_id BIGINT PRIMARY KEY,
         period INTEGER DEFAULT {DEFAULT_SETTINGS["period"]},
-        threshold INTEGER DEFAULT {DEFAULT_SETTINGS["threshold"]},
-        active_exchanges TEXT DEFAULT '{json.dumps(DEFAULT_EXCHANGES)}',
+        threshold REAL DEFAULT {DEFAULT_SETTINGS["threshold"]},
+        active_exchanges VARCHAR(250) DEFAULT '{json.dumps(DEFAULT_EXCHANGES)}',
         time_zone VARCHAR(50) DEFAULT '{DEFAULT_TIME_ZONE}'
     )
     """
@@ -24,6 +27,7 @@ class UserSettingsRepository:
             await conn.execute(self.CREATE_TABLE_QUERY)
             await conn.commit()
 
+
     async def get_user_settings(self, user_id: int):
         async with self.pool.connection() as conn:
             async with conn.cursor() as cur:
@@ -32,9 +36,9 @@ class UserSettingsRepository:
                     (user_id,)
                 )
                 row = await cur.fetchone()
-
         if row:
             period, threshold, active_exchanges, time_zone = row
+
             return {
                 "period": period or DEFAULT_SETTINGS["period"],
                 "threshold": threshold or DEFAULT_SETTINGS["threshold"],

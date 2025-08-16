@@ -42,8 +42,8 @@ async def show_settings_menu(target):
     """
     await target.answer(
         "⚙️ Please select the screener settings:\n\n"
-        "⏱️ <b>Period</b> – how many minutes to check for growth (5–30 min)\n"
-        "📈 <b>Threshold</b> – %growth needed to trigger a signal (0.01–100 % )\n"
+        "⏱️ <b>Period</b> – how many minutes to check for growth (1–30 min)\n"
+        "📈 <b>Threshold</b> – %growth needed to trigger a signal (1–100 % )\n"
         "🕒 <b>Time zone</b> – your local time\n"
         "▶️ <b>Run scanner</b> – start scanning using your current settings",
         reply_markup=settings_menu
@@ -172,13 +172,13 @@ async def process_period(message: Message, state: FSMContext):
         text = message.text.strip()
 
         if not text.isdigit():
-            await message.answer("❌ Please enter a integer number from 5 to 30.")
-            logger.warning(f"Problem set period: ❌ Please enter a integer number from 5 to 30: {text}")
+            await message.answer("❌ Please enter a integer number from 1 to 30.")
+            logger.warning(f"Problem set period: ❌ Please enter a integer number from 1 to 30: {text}")
             return
 
         period = int(text)
-        if not 5 <= period <= 30:
-            raise ValueError(f"❌ The period should be integer number from 5 to 30: {period}")
+        if not 1 <= period <= 30:
+            raise ValueError(f"❌ The period should be integer number from 1 to 30: {period}")
 
         user_id = message.from_user.id
 
@@ -229,13 +229,13 @@ async def process_threshold(message: Message, state: FSMContext):
         text = message.text.strip()
 
         if not text.isdigit():
-            await message.answer("❌ Please enter a integer number from 0 to 100.")
-            logger.warning(f"Problem set threshold: ❌ Please enter a integer number from 0 to 100: {text}")
+            await message.answer("❌ Please enter a integer number from 1 to 100.")
+            logger.warning(f"Problem set threshold: ❌ Please enter a integer number from 1 to 100: {text}")
             return
 
         threshold = float(text)
-        if not 0 <= threshold <= 100:
-            raise ValueError(f"❌ The percentage must be integer number between 0 and 100: {threshold}")
+        if not 0 < threshold <= 100:
+            raise ValueError(f"❌ The percentage must be integer number between 1 and 100: {threshold}")
         threshold = threshold / 100
 
         user_id = message.from_user.id
