@@ -96,8 +96,8 @@ class BinanceListener(BaseExchangeListener):
         try:
             async with session.get(url, params=params, timeout=10) as resp:
                 if resp.status != 200:
-                    text = await resp.text()
-                    logger.warning(f"OI request failed for {symbol}: {resp.status}, {text}")
+                    #text = await resp.text()
+                    #logger.warning(f"OI request failed for {symbol}: {resp.status}, {text}")
                     return {}
 
                 data = await resp.json()
@@ -162,8 +162,8 @@ class BinanceListener(BaseExchangeListener):
         try:
             async with session.get(url, params=params, timeout=10) as resp:
                 if resp.status != 200:
-                    text = await resp.text()
-                    logger.warning(f"OHLCV request failed for {symbol}: {resp.status}, {text}")
+                    # text = await resp.text()
+                    # logger.warning(f"OHLCV request failed for {symbol}: {resp.status}, {text}")
                     return None
 
                 data = await resp.json()

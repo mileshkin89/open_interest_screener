@@ -1,3 +1,5 @@
+
+from datetime import datetime, timedelta
 from psycopg_pool import AsyncConnectionPool
 from psycopg.rows import dict_row
 from psycopg import errors
@@ -19,7 +21,7 @@ class HistoryDataRepository:
                 await conn.execute(
                     f"""
                     CREATE TABLE IF NOT EXISTS {exchange}_history_oi (
-                            symbol CHARACTER(50) NOT NULL,
+                            symbol CHARACTER(30) NOT NULL,
                             timestamp TIMESTAMPTZ NOT NULL,
                             open_interest DOUBLE PRECISION,
                             PRIMARY KEY (symbol, timestamp)
@@ -34,7 +36,7 @@ class HistoryDataRepository:
                 await conn.execute(
                     f"""
                     CREATE TABLE IF NOT EXISTS {exchange}_history_ohlcv (
-                            symbol CHARACTER(50) NOT NULL,
+                            symbol CHARACTER(30) NOT NULL,
                             timestamp TIMESTAMPTZ NOT NULL,
                             open DOUBLE PRECISION,
                             high DOUBLE PRECISION,
@@ -118,41 +120,41 @@ class HistoryDataRepository:
 
 
 
-    async def get_oi_by_period(self, exchange: str, symbol: str, before_date: int, period_in_minutes: int = 24 *60) -> list[dict]:
+    async def get_oi_by_period(self, exchange: str, symbol: str, before_date: datetime, period_in_minutes: int = 24 *60) -> list[dict]:
 
-        since_date = before_date - period_in_minutes * 60 * 1000
+        since_date = before_date - timedelta(minutes=period_in_minutes)
 
         async with self.pool.connection() as conn:
             async with conn.cursor(row_factory=dict_row) as cur:
                 await cur.execute(
                     f"""
-                    SELECT timestamp, open_interest
+                    SELECT symbol, timestamp, open_interest
                     FROM {exchange}_history_oi
                     WHERE symbol = %s
-                    AND timestamp <= to_timestamp(%s)
-                    AND timestamp >= to_timestamp(%s)
+                      AND timestamp <= %s
+                      AND timestamp >= %s
                     ORDER BY timestamp DESC
                     """,
-                    (symbol, before_date / 1000.0, since_date / 1000.0)
+                    (symbol, before_date, since_date)
                 )
                 rows = await cur.fetchall()
                 return rows
 
 
-    async def get_ohlcv_by_period(self, exchange: str, symbol: str, before_date: int, since_date: int) -> list[dict]:
+    async def get_ohlcv_by_period(self, exchange: str, symbol: str, before_date: datetime, since_date: datetime) -> list[dict]:
 
         async with self.pool.connection() as conn:
             async with conn.cursor(row_factory=dict_row) as cur:
                 await cur.execute(
                     f"""
-                    SELECT timestamp, close, volume
+                    SELECT symbol, timestamp, close, volume
                     FROM {exchange}_history_ohlcv
                     WHERE symbol = %s
-                    AND timestamp <= to_timestamp(%s)
-                    AND timestamp >= to_timestamp(%s)
+                    AND timestamp <= %s
+                    AND timestamp >= %s
                     ORDER BY timestamp DESC
                     """,
-                    (symbol, before_date / 1000.0, since_date / 1000.0)
+                    (symbol, before_date, since_date)
                 )
                 rows = await cur.fetchall()
                 return rows

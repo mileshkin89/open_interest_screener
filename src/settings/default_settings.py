@@ -58,9 +58,9 @@ ensuring it doesn't immediately re-enter the loop and consume unnecessary CPU re
 """
 
 
-SLEEP_TIMER_SECOND = 300
+SLEEP_TIMER_SECOND = 60
 """
-int: Default interval (in seconds) between scanner cycles or background checks (e.g., 5 minutes).
+int: Default interval (in seconds) between scanner cycles or background checks (e.g., 1 minutes).
 """
 
 SLEEP_RETENTION_WORKER = 900
